@@ -1,0 +1,7 @@
+﻿[*.cs]
+
+# CS8618: Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+dotnet_diagnostic.CS8618.severity = none
+
+# MsgPack004: Attribute public members of MessagePack objects
+dotnet_diagnostic.MsgPack004.severity = error
