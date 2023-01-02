@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Unilevel.Data;
 
@@ -11,9 +12,10 @@ using Unilevel.Data;
 namespace Unilevel.Migrations
 {
     [DbContext(typeof(UnilevelContext))]
-    partial class UnilevelContextModelSnapshot : ModelSnapshot
+    [Migration("20230102130953_ModifierDb")]
+    partial class ModifierDb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -95,7 +97,7 @@ namespace Unilevel.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("AreaCode")
+                    b.Property<string>("AreaCore")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Avatar")
@@ -112,7 +114,7 @@ namespace Unilevel.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte[]>("PasswordHash")
+                    b.Property<byte[]>("PasswordHass")
                         .IsRequired()
                         .HasColumnType("varbinary(max)");
 
@@ -137,7 +139,7 @@ namespace Unilevel.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AreaCode");
+                    b.HasIndex("AreaCore");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -166,7 +168,7 @@ namespace Unilevel.Migrations
                 {
                     b.HasOne("Unilevel.Data.Area", "Area")
                         .WithMany()
-                        .HasForeignKey("AreaCode");
+                        .HasForeignKey("AreaCore");
 
                     b.HasOne("Unilevel.Data.Role", "ReportT")
                         .WithMany()

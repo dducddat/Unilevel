@@ -1,18 +1,22 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Unilevel.Data
 {
+    [Index(nameof(Email), IsUnique = true)]
+    [Index(nameof(PhoneNumber), IsUnique = true)]
     public class Distributor
     {
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
-        public string? Name { get; set; }
-        public string? Email { get; set; }
-        public string? Address { get; set; }
+        [Key]
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string Address { get; set; }
         public string? PhoneNumber { get; set; }
 
         [ForeignKey("Area")]
-        public int? AreaId { get; set; }
+        public string? AreaCore { get; set; }
         public Area? Area { get; set; }
     }
 }

@@ -4,6 +4,6 @@ namespace Unilevel.Services
 {
     public interface IDistributorRepository
     {
-        public Task<List<DistributorModel>> GetAllDistributorAsync();
+        public Task<List<DistributorDTO>> GetAllDistributorAsync();
     }
 }

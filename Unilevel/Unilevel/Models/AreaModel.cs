@@ -1,24 +1,25 @@
-﻿namespace Unilevel.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Unilevel.Models
 {
-    public class AreaModel
+    public class AreaDTO
     {
-        public string? AreaCode { get; set; }
-        public string? Name { get; set; }
+        public string AreaCode { get; set; }
+        public string Name { get; set; }
     }
 
-    public class AddArea
+    public class AreaNameDTO
     {
-        public string? AreaName { get; set; }
+        public string AreaName { get; set; }
     }
 
-    public class AreaList : AreaModel
+    public class AreaDisQtyDTO : AreaDTO
     {
-        public int? TotalDistributor { get; set; }
+        public int? DistributorQty { get; set; }
     }
 
-    public class AreaDetail : AreaModel
+    public class AreaDetailDTO : AreaDTO
     {
-        public List<DistributorModel> DistributorModels { get; set; }
-        public List<UserModel> UserModels { get; set; }
+        public List<DistributorDTO> Distributors { get; set; }
     }
 }

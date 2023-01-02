@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Unilevel.Data;
 
@@ -11,9 +12,10 @@ using Unilevel.Data;
 namespace Unilevel.Migrations
 {
     [DbContext(typeof(UnilevelContext))]
-    partial class UnilevelContextModelSnapshot : ModelSnapshot
+    [Migration("20221230070404_NewDatabase")]
+    partial class NewDatabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,9 +95,10 @@ namespace Unilevel.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Address")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("AreaCode")
+                    b.Property<string>("AreaCore")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Avatar")
@@ -112,7 +115,7 @@ namespace Unilevel.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte[]>("PasswordHash")
+                    b.Property<byte[]>("PasswordHass")
                         .IsRequired()
                         .HasColumnType("varbinary(max)");
 
@@ -121,6 +124,7 @@ namespace Unilevel.Migrations
                         .HasColumnType("varbinary(max)");
 
                     b.Property<string>("PhoneNumber")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int?>("Rating")
@@ -137,14 +141,13 @@ namespace Unilevel.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AreaCode");
+                    b.HasIndex("AreaCore");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
                     b.HasIndex("PhoneNumber")
-                        .IsUnique()
-                        .HasFilter("[PhoneNumber] IS NOT NULL");
+                        .IsUnique();
 
                     b.HasIndex("ReportTo");
 
@@ -166,7 +169,7 @@ namespace Unilevel.Migrations
                 {
                     b.HasOne("Unilevel.Data.Area", "Area")
                         .WithMany()
-                        .HasForeignKey("AreaCode");
+                        .HasForeignKey("AreaCore");
 
                     b.HasOne("Unilevel.Data.Role", "ReportT")
                         .WithMany()

@@ -9,7 +9,9 @@ builder.Services.AddDbContext<UnilevelContext>(options =>
 builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddScoped<IAreaRepository, AreaRepository>();
-builder.Services.AddScoped<IDistributorRepository, DistributorRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+//builder.Services.AddScoped<IDistributorRepository, DistributorRepository>();
 
 // Add services to the container.
 
