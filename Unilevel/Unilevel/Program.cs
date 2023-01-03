@@ -11,6 +11,7 @@ builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddScoped<IAreaRepository, AreaRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IEmailServices, EmailServices>();
 //builder.Services.AddScoped<IDistributorRepository, DistributorRepository>();
 
 // Add services to the container.

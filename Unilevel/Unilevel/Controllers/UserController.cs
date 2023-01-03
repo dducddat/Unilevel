@@ -14,10 +14,12 @@ namespace Unilevel.Controllers
     public class UserController : ControllerBase
     {
         public readonly IUserRepository _userRepository;
+        public readonly IEmailServices _emailService;
 
-        public UserController(IUserRepository userRepository)
+        public UserController(IUserRepository userRepository, IEmailServices emailServices)
         {
             _userRepository = userRepository;
+            _emailService= emailServices;
         }
 
         [HttpPost("AddUser")]
@@ -38,14 +40,8 @@ namespace Unilevel.Controllers
         public async Task<IActionResult> Login(UserLoginDTO user) 
         {
             var a = await _userRepository.LoginAsync(user);
-            return Ok(new a1(a));
+            return Ok();
         }
-    }
 
-    public class a1
-    {
-        public byte[] data { get; set; }
-
-        public a1(byte[] data1) { data = data1 ?? new byte[0]; }
     }
 }

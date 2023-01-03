@@ -7,8 +7,8 @@ namespace Unilevel.Services
 {
     public class AreaRepository : IAreaRepository
     {
-        public readonly UnilevelContext _context;
-        public readonly IMapper _mapper;
+        private readonly UnilevelContext _context;
+        private readonly IMapper _mapper;
 
         public AreaRepository(UnilevelContext context, IMapper mapper)
         {

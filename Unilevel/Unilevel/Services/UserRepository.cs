@@ -13,10 +13,12 @@ namespace Unilevel.Services
     public class UserRepository : IUserRepository
     {
         private readonly UnilevelContext _context;
+        private readonly IEmailServices _emailService;
 
-        public UserRepository(UnilevelContext context) 
+        public UserRepository(UnilevelContext context, IEmailServices emailServices) 
         {
             _context = context;
+            _emailService = emailServices;
         }
 
         public void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
@@ -37,21 +39,6 @@ namespace Unilevel.Services
             }    
         }
 
-        public void SendMail(string body)
-        {
-            var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse("anthonykongdong@gmail.com"));
-            email.To.Add(MailboxAddress.Parse("kercoodown012@gmail.com"));
-            email.Subject = "Login infor";
-            email.Body = new TextPart(TextFormat.Html) { Text = body };
-
-            using var smtp = new SmtpClient();
-            smtp.Connect("smtp.ethereal.email", 587, SecureSocketOptions.StartTls);
-            smtp.Authenticate("milan.ernser51@ethereal.email", "VAnn3SFxqSjNm6Z2ek");
-            smtp.Send(email);
-            smtp.Disconnect(true);
-        }
-
         public async Task CreateUserAsync(AddUserDTO user)
         {
             var userEmail = _context.Users.SingleOrDefault(u => u.Email == user.Email);
@@ -67,7 +54,11 @@ namespace Unilevel.Services
                 password += chars[x];
             }
 
-            Console.WriteLine(password);
+            EmailDTO emailDTO = new EmailDTO();
+            emailDTO.To = user.Email;
+            emailDTO.Subject = "Login Infor";
+            emailDTO.Body = "<h1>Login Infor</h1> <p>Username:" + user.Email + "</p> </br> <p>Password:" + password + "</p>"; 
+            _emailService.SendEmail(emailDTO);
             CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
 
             string id = DateTime.Now.ToString("ddMMyyhhmmssfffffff");
