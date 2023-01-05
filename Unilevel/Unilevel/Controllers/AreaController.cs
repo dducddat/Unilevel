@@ -16,8 +16,8 @@ namespace Unilevel.Controllers
             _areaRepo = areaRepo;
         }
 
-        //GET: Area/ListArea
-        [HttpGet("ListArea")]
+        // GET: Area/Area-List
+        [HttpGet("Area-List")]
          public async Task<IActionResult> GetAllArea()
         {
             return Ok(await _areaRepo.GetAllAreaAsync());
@@ -38,42 +38,56 @@ namespace Unilevel.Controllers
         //     }
         // }
 
-        // POST: Area/CreateArea
-        [HttpPost("CreateArea")]
-        public async Task<IActionResult> AddArea(AreaNameDTO name)
+        // POST: Area/Create-Area
+        [HttpPost("Create-Area")]
+        public async Task<IActionResult> AddArea(AddOrEditArea area)
         {
             try
             {
-                if (name.AreaName.Length != 0)
+                if (area.AreaName != string.Empty && area.AreaName != null)
                 {
-                    await _areaRepo.AddAreaAsync(name);
-                    return Ok(new ObjectRespone(true, "add new success"));
+                    await _areaRepo.AddAreaAsync(area);
+                    return Ok(new APIRespone(true, "success"));
                 }
-                return BadRequest(new ObjectRespone(false, "name cannot to blank" ));
+                else
+                {
+                    return BadRequest(new APIRespone(false, "name cannot to blank"));
+                }
             }
-            catch (Exception ex) { return BadRequest(new { succes = false, message = ex.Message }); }
+            catch (Exception ex) { return Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError); }
         }
 
-        // PUT: Area/EditArea/{AreaCode}
-        [HttpPut("EditArea/{areaCode}")]
-        public async Task<IActionResult> EditArea(AreaNameDTO name, string areaCode)
+        // PUT: Area/Edit-Area/{areaCode}
+        [HttpPut("Edit-Area/{areaCode}")]
+        public async Task<IActionResult> EditArea(AddOrEditArea area, string areaCode)
         {
             try
             {
-                await _areaRepo.EditAreaAsync(name, areaCode);
-                return Ok(new ObjectRespone(true, "edit successfully"));
+                if (area.AreaName == string.Empty && area.AreaName == null) 
+                { 
+                    return BadRequest(new APIRespone(false, "name cannot be blank")); 
+                }
+                await _areaRepo.EditAreaAsync(area, areaCode);
+                return Ok(new APIRespone(true, "success"));
             }
             catch (Exception ex)
             {
-                return BadRequest(new ObjectRespone(false, ex.Message));
+                return BadRequest(new APIRespone(false, ex.Message));
             }
         }
 
-        //[HttpDelete("DeleteArea/{id}")]
-        //public async Task<IActionResult> DeleteArea(int id)
-        //{
-        //    await _areaRepo.DeleteAreaAsync(id);
-        //    return Ok();
-        //}
+        [HttpDelete("Delete-Area/{areaCode}")]
+        public async Task<IActionResult> DeleteArea(string areaCode)
+        {
+            try
+            {
+                await _areaRepo.DeleteAreaAsync(areaCode);
+                return Ok(new APIRespone(true, "success"));
+            }
+            catch(Exception ex) 
+            {
+                return BadRequest(new APIRespone(false, ex.Message));
+            }
+        }
     }
 }

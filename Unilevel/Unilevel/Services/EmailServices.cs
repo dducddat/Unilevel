@@ -8,13 +8,13 @@ namespace Unilevel.Services
 {
     public class EmailServices : IEmailServices
     {
-        public readonly IConfiguration _configuration;
+        private readonly IConfiguration _configuration;
 
         public EmailServices(IConfiguration configuration)
         {
             _configuration = configuration;
         }
-        public void SendEmail(EmailDTO email)
+        public void SendEmail(EmailModel email)
         {
             MimeMessage message = new MimeMessage();
             message.From.Add(MailboxAddress.Parse(_configuration.GetSection("EmailUsername").Value));

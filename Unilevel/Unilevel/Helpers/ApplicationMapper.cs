@@ -9,18 +9,13 @@ namespace Unilevel.Helpers
     {
         public ApplicationMapper()
         {
-            CreateMap<Distributor, DistributorDTO>().ReverseMap()
-                .ForMember(source => source.Id,
-                            options => options.MapFrom(destination => destination.Id))
-                .ForMember(source => source.Name,
-                            options => options.MapFrom(destination => destination.Name))
-                .ForMember(source => source.Email,
-                            options => options.MapFrom(destination => destination.Email))
-                .ForMember(source => source.Address,
-                            options => options.MapFrom(destination => destination.Address))
-                .ForMember(source => source.PhoneNumber,
-                            options => options.MapFrom(destination => destination.PhoneNumber));
-            CreateMap<Role, RoleDTO>().ReverseMap();
+            CreateMap<Role, RoleDetail>().ReverseMap();
+            CreateMap<Area, AreaInfor>().ForMember(des => des.AreaCode,
+                act => act.MapFrom(src => src.AreaCode))
+                                        .ForMember(des => des.Name,
+                act => act.MapFrom(src => src.Name))
+                                        .ReverseMap();
+            CreateMap<Distributor, DistributorModel>().ReverseMap();
         }
     }
 }

@@ -2,24 +2,19 @@
 
 namespace Unilevel.Models
 {
-    public class AreaDTO
+    public class AreaInfor
     {
         public string AreaCode { get; set; }
         public string Name { get; set; }
     }
 
-    public class AreaNameDTO
+    public class AddOrEditArea
     {
         public string AreaName { get; set; }
     }
 
-    public class AreaDisQtyDTO : AreaDTO
+    public class AreaDetail : AreaInfor
     {
-        public int? DistributorQty { get; set; }
-    }
-
-    public class AreaDetailDTO : AreaDTO
-    {
-        public List<DistributorDTO> Distributors { get; set; }
+        public List<DistributorModel> Distributors { get; set; }
     }
 }

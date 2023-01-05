@@ -16,7 +16,6 @@ namespace Unilevel.Data
         public byte[] PasswordSalt { get; set; }
         public string? Address { get; set; }
         public string? PhoneNumber { get; set; }
-        public string? Avatar { get; set; }
         public DateTime CreatedDate { get; set; }
         public int? Rating { get; set; }
         public bool Status { get; set; }
@@ -24,13 +23,13 @@ namespace Unilevel.Data
         public string? ReportTo { get; set; }
 
         [ForeignKey("RoleId")]
-        public Role? Role { get; set; }
+        public Role Role { get; set; }
 
         [ForeignKey("ReportTo")]
-        public Role? ReportT { get; set; }
+        public Role ReportT { get; set; }
 
         [ForeignKey("Area")]
         public string? AreaCode { get; set; }
-        public Area? Area { get; set; }
+        public Area Area { get; set; }
     }
 }

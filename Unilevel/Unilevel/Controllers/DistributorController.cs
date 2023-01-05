@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Utilities.Encoders;
+using System.Data;
+using Unilevel.Models;
 using Unilevel.Services;
 
 namespace Unilevel.Controllers
@@ -20,5 +23,22 @@ namespace Unilevel.Controllers
         {
             return Ok(await _distributorRepository.GetAllDistributorAsync());
         }
+
+        //[HttpPost("Add-Distributor")]
+        //public async Task<IActionResult> AddDistributor(DistributorModel distributor)
+        //{
+        //    try
+        //    {
+        //        await _distributorRepository.AddDistributorAsync(distributor);
+        //    }
+        //    catch (DuplicateNameException dex)
+        //    {
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+
+        //    }
+        //}
     }
 }

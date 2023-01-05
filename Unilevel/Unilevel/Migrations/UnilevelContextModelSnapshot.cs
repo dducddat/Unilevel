@@ -73,6 +73,42 @@ namespace Unilevel.Migrations
                     b.ToTable("Distributors");
                 });
 
+            modelBuilder.Entity("Unilevel.Data.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Expires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("JwtId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("Unilevel.Data.Role", b =>
                 {
                     b.Property<string>("Id")
@@ -97,9 +133,6 @@ namespace Unilevel.Migrations
 
                     b.Property<string>("AreaCode")
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Avatar")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
@@ -130,6 +163,7 @@ namespace Unilevel.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("RoleId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("Status")
@@ -162,6 +196,15 @@ namespace Unilevel.Migrations
                     b.Navigation("Area");
                 });
 
+            modelBuilder.Entity("Unilevel.Data.RefreshToken", b =>
+                {
+                    b.HasOne("Unilevel.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Unilevel.Data.User", b =>
                 {
                     b.HasOne("Unilevel.Data.Area", "Area")
@@ -174,7 +217,9 @@ namespace Unilevel.Migrations
 
                     b.HasOne("Unilevel.Data.Role", "Role")
                         .WithMany()
-                        .HasForeignKey("RoleId");
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Area");
 

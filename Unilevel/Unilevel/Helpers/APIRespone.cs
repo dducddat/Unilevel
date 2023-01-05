@@ -1,11 +1,11 @@
 ﻿namespace Unilevel.Helpers
 {
-    public class ObjectRespone
+    public class APIRespone
     {
         public bool Success { get; set; }
         public string Message { get; set; }
 
-        public ObjectRespone (bool success, string message)
+        public APIRespone (bool success, string message)
         {
             Success = success;
             Message = message;

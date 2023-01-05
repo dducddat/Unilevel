@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Unilevel.Data;
 using Unilevel.Models;
@@ -16,67 +17,55 @@ namespace Unilevel.Services
             _mapper = mapper;
         }
 
-        public async Task AddAreaAsync(AreaNameDTO name)
+        public async Task AddAreaAsync(AddOrEditArea area)
         {
-            Area area = new Area()
+            Area areaNew = new Area()
             {
-                AreaCode = "COD" + DateTime.Now.ToString("ddMMyyhhmmssfffffff"),
-                Name = name.AreaName
+                AreaCode = "COD" + DateTime.Now.ToString("ddMMyyhhmmss"),
+                Name = area.AreaName
             };
-            var are = _context.Areas.SingleOrDefault(a => a.AreaCode == area.AreaCode);
-            if (are == null)
+            var ar = _context.Areas.SingleOrDefault(a => a.AreaCode == areaNew.AreaCode);
+            if (ar == null)
             {
-                _context.Add(area);
+                _context.Add(areaNew);
                 await _context.SaveChangesAsync();
-            } else { throw new Exception("Area code already exist"); }; 
+            } else { throw new Exception("Area code already exist, please wait a second and recreate"); }; 
         }
 
-        //public async Task DeleteAreaAsync(int id)
-        //{
-        //    var area = _context.Areas.Find(id);
-        //    if (area == null)
-        //    {
-        //        throw new Exception("area not exist");
-        //    }
-        //    var users = _context.Users.Where(u => u.AreaId == id).ToList();
-        //    if (users != null)
-        //    {
-        //        foreach (var item in users)
-        //        {
-        //            item.AreaId = 9;
-        //            _context.Users.Update(item);
-        //            await _context.SaveChangesAsync();
-        //        }
-        //    }
-        //    _context.Remove(area);
-        //    await _context.SaveChangesAsync();
-        //}
-
-        public async Task EditAreaAsync(AreaNameDTO name, string areaCode)
+        public async Task DeleteAreaAsync(string areaCode)
         {
             var area = _context.Areas.Find(areaCode);
-            if (area == null) { throw new Exception("area not exist"); }
-            if (name.AreaName.Length == 0) { throw new Exception("name cannot be blank"); }
-            area.Name = name.AreaName; 
-            _context.Update(area);
+            if (area == null)
+            {
+                throw new Exception("area not exist");
+            }
+            var users = _context.Users.Where(u => u.AreaCode == areaCode).ToList();
+            if (users != null)
+            {
+                foreach (var user in users)
+                {
+                    user.AreaCode = null;
+                    _context.Users.Update(user);
+                    await _context.SaveChangesAsync();
+                }
+            }
+            _context.Remove(area);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<AreaDisQtyDTO>> GetAllAreaAsync()
+        public async Task EditAreaAsync(AddOrEditArea area, string areaCode)
+        {
+            var areaData = _context.Areas.Find(areaCode);
+            if (areaData == null) { throw new Exception("area not exist"); }
+            areaData.Name = area.AreaName; 
+            _context.Update(areaData);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<AreaInfor>> GetAllAreaAsync()
         {
             var areas = await _context.Areas.ToListAsync();
-            List<AreaDisQtyDTO> areaDisQtyDTOs = new List<AreaDisQtyDTO>();
-            foreach (var item in areas)
-            {
-                int distributorQty = _context.Distributors.Count(d => d.AreaCore == item.AreaCode);
-                areaDisQtyDTOs.Add(new AreaDisQtyDTO()
-                {
-                    AreaCode = item.AreaCode,
-                    Name = item.Name,
-                    DistributorQty = distributorQty
-                });
-            }
-            return areaDisQtyDTOs;
+            return _mapper.Map<List<AreaInfor>>(areas);
         }
 
         //public async Task<AreaDetailDTO> GetAreaAsync(int id)

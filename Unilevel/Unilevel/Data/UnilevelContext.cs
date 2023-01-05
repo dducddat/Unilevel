@@ -10,6 +10,7 @@ namespace Unilevel.Data
         {
         }
 
+        public DbSet<Unilevel.Data.RefreshToken> RefreshTokens { get; set; } = default!;
         public DbSet<Unilevel.Data.User> Users { get; set; } = default!;
         public DbSet<Unilevel.Data.Role> Roles { get; set; } = default!;
         public DbSet<Unilevel.Data.Distributor> Distributors { get; set; } = default!;
