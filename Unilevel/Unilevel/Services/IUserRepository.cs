@@ -13,5 +13,9 @@ namespace Unilevel.Services
         public Task RemoveUserFromAreaAsync(string id);
         public Task EditInfoUserAsync(EditInfoUser user, string id);
         public Task EditRoleUserAsync(string id, string roleId);
+        public Task ImportUserFromFileExcelAsync(List<FileExcelUser> excelUsers);
+        public Task<TokenModel> RefreshTokenAsync(TokenModel token);
+        public Task ChangePasswordAsync(string userId, string password, string newPassword);
+        public Task Logout(string userId);
     }
 }

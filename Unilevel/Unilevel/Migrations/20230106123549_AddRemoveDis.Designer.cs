@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Unilevel.Data;
 
@@ -11,9 +12,10 @@ using Unilevel.Data;
 namespace Unilevel.Migrations
 {
     [DbContext(typeof(UnilevelContext))]
-    partial class UnilevelContextModelSnapshot : ModelSnapshot
+    [Migration("20230106123549_AddRemoveDis")]
+    partial class AddRemoveDis
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,44 +78,6 @@ namespace Unilevel.Migrations
                     b.ToTable("Distributors");
                 });
 
-            modelBuilder.Entity("Unilevel.Data.Question", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("AnswerA")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AnswerB")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AnswerC")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AnswerD")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Status")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SurveyId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SurveyId");
-
-                    b.ToTable("Questions");
-                });
-
             modelBuilder.Entity("Unilevel.Data.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -157,29 +121,6 @@ namespace Unilevel.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
-                });
-
-            modelBuilder.Entity("Unilevel.Data.Survey", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("NumberOfPeopleDid")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Surveys");
                 });
 
             modelBuilder.Entity("Unilevel.Data.User", b =>
@@ -253,15 +194,6 @@ namespace Unilevel.Migrations
                         .HasForeignKey("AreaCore");
 
                     b.Navigation("Area");
-                });
-
-            modelBuilder.Entity("Unilevel.Data.Question", b =>
-                {
-                    b.HasOne("Unilevel.Data.Survey", "Survey")
-                        .WithMany()
-                        .HasForeignKey("SurveyId");
-
-                    b.Navigation("Survey");
                 });
 
             modelBuilder.Entity("Unilevel.Data.RefreshToken", b =>

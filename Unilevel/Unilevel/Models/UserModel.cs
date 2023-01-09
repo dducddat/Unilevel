@@ -5,6 +5,15 @@
         public string Email { get; set; }
         public string Password { get; set; }
     }
+
+    public class ChangePass
+    {
+        public string Password { get; set; }
+        public string NewPassword { get; set; }
+        public string ConfirmNewPassword { get; set; }
+    }
+
+
     public class UserInfo
     {
         public string Id { get; set; }

@@ -15,6 +15,7 @@ namespace Unilevel.Models
 
     public class AreaDetail : AreaInfor
     {
-        public List<DistributorModel> Distributors { get; set; }
+        public List<ViewDis> Distributors { get; set; }
+        public List<UserInfo> Users { get; set; }
     }
 }

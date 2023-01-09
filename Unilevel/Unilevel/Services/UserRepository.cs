@@ -44,7 +44,7 @@ namespace Unilevel.Services
         public async Task CreateUserAsync(AddUser user)
         {
             var userEmail = _context.Users.SingleOrDefault(u => u.Email == user.Email);
-            if (userEmail != null) { throw new DuplicateNameException("email already exist"); }
+            if (userEmail != null) { throw new DuplicateNameException($"email {user.Email} already exist"); }
             Random rand = new Random();
             string chars = "0123456789";
             int stringlen = rand.Next(8, 16);
@@ -88,17 +88,68 @@ namespace Unilevel.Services
 
         public async Task<TokenModel> LoginAsync(UserLogin user)
         {
-            if (user.Email.Length == 0 || user.Password.Length == 0) { throw new Exception("invalid username/password"); }
+            if (user.Email == string.Empty || user.Password == string.Empty) { throw new Exception("invalid username/password"); }
             var us = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == user.Email);
             if (us == null) { throw new Exception("user not found"); }
             if (!VeryfiPasswordHash(user.Password, us.PasswordHash, us.PasswordSalt))
             {
                 throw new Exception("wrong password");
             }
+            if (!us.Status) throw new Exception("Account has been disabled");
 
-            TokenModel token = GenerateToken(us); 
+            var token = GenerateToken(us);
 
             return token;
+        }
+
+        public async Task<TokenModel> RefreshTokenAsync(TokenModel token)
+        {
+            if (token is null) throw new Exception("Invalid client request");
+
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
+                .GetBytes(_configuration.GetSection("SecretKey").Value)),
+
+                ClockSkew = TimeSpan.Zero,
+
+                ValidateLifetime = false
+            };
+
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
+
+            var tokenInVerification = jwtTokenHandler.ValidateToken(token.AccessToken,
+                tokenValidationParameters, out var validateToken);
+            if (!(validateToken is JwtSecurityToken jwtSecurityToken)) throw new Exception("access token invalid format");
+
+            var result = jwtSecurityToken.Header.Alg.Equals
+                    (SecurityAlgorithms.HmacSha512,
+                    StringComparison.InvariantCultureIgnoreCase);
+
+            if (!result) throw new SecurityTokenException("Invalid token");
+
+            var jwtId = tokenInVerification.FindFirstValue(JwtRegisteredClaimNames.Jti);
+
+            var storedToken = _context.RefreshTokens.SingleOrDefault(r => r.JwtId == jwtId);
+
+            if (storedToken is null || storedToken.RefToken != token.RefreshToken)
+                throw new Exception("Invalid client request");
+            if (storedToken.Expires <= DateTime.Now)
+            {
+                _context.Remove(storedToken);
+                await _context.SaveChangesAsync();
+                throw new Exception("refresh token has expried please login agian");
+            }
+
+            var user = _context.Users.Include(u => u.Role).SingleOrDefault(u => u.Id == storedToken.UserId);
+            var newToken = GenerateToken(user);
+            _context.Remove(storedToken);
+            await _context.SaveChangesAsync();
+
+            return newToken;
         }
 
         private TokenModel GenerateToken(User user)
@@ -107,39 +158,35 @@ namespace Unilevel.Services
 
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("SecretKey").Value));
 
-            var cred = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha512Signature);
+            var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha512Signature);
+
+            string JwtId = DateTime.Now.ToString("ddMMyyhhmmssfffffff");
 
             var tokenDescription = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
                 {
+                    new Claim("id", user.Id),
                     new Claim(ClaimTypes.Name, user.FullName),
                     new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                    new Claim(JwtRegisteredClaimNames.Sub, user.Email),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(ClaimTypes.Role, user.Role.Name),
-                    new Claim("Id", user.Id)
+                    new Claim(JwtRegisteredClaimNames.Jti, JwtId),
+                    new Claim(ClaimTypes.Role, user.Role.Name)
                 }),
-                Expires = DateTime.Now.AddDays(1),
-                SigningCredentials = cred
+                Expires = DateTime.Now.AddHours(12),
+                SigningCredentials = signinCredentials
             };
 
             var token = jwtTokenHandler.CreateToken(tokenDescription);
             var accessToken = jwtTokenHandler.WriteToken(token);
-            var refreshToken = GenerateRefreshToken();
+            string refreshToken = GenerateRefreshToken();
 
-            var refreshTokenEntity = new RefreshToken { 
+            _context.Add(new RefreshToken { 
                 Id = Guid.NewGuid(),
-                JwtId = token.Id,
                 UserId = user.Id,
-                Token = refreshToken,
-                IsUsed = false,
-                IsRevoked = false,
-                Created = DateTime.Now,
-                Expires = DateTime.Now.AddDays(1),
-            };
-
-            _context.RefreshTokens.Add(refreshTokenEntity);
+                RefToken = refreshToken,
+                JwtId = JwtId,
+                Expires = DateTime.Now.AddDays(7)
+            });
             _context.SaveChanges();
 
             return new TokenModel
@@ -151,8 +198,12 @@ namespace Unilevel.Services
 
         private string GenerateRefreshToken()
         {
-            string refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-            return refreshToken;
+            var randomNumber = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                return Convert.ToBase64String(randomNumber);
+            }
         }
 
         public async Task<List<UserInfo>> GetAllUserAsync()
@@ -265,6 +316,58 @@ namespace Unilevel.Services
             else
             {
                 throw new Exception("role/user not found");
+            }
+        }
+
+        public async Task ImportUserFromFileExcelAsync(List<FileExcelUser> excelUsers)
+        {
+            var fileExcelUsers = excelUsers;
+            foreach(var user in fileExcelUsers) {
+                var role = _context.Roles.FirstOrDefault(r => r.Name == user.Role && r.Remove == false);
+                var reportToRole = _context.Roles.FirstOrDefault(r => r.Name == user.ReportTo && r.Remove == false);
+                if (role != null && reportToRole != null)
+                {
+                    try
+                    {
+                        await CreateUserAsync(new AddUser()
+                        {
+                            FullName = user.FullName,
+                            Email = user.Email,
+                            RoleId = role.Id,
+                            Status = false,
+                            ReportTo = reportToRole.Id
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"User:{user.FullName} {user.Role} {user.ReportTo} {ex.Message} ");
+                    }
+                }
+                else
+                {
+                    throw new Exception($"User: {user.FullName} {user.Email} Role/ReportTo {user.Role}/{user.ReportTo} not exist");
+                }
+            }
+        }
+
+        public async Task ChangePasswordAsync(string userId, string password, string newPassword)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if(!VeryfiPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            { throw new Exception("old password is not correct"); }
+            CreatePasswordHash(newPassword, out byte[] passwordHash, out byte[] passwordSalt);
+            user.PasswordHash = passwordHash;
+            user.PasswordSalt = passwordSalt;
+            _context.Update(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task Logout(string userId)
+        {
+            var storedToken = _context.RefreshTokens.Where(r => r.UserId == userId).ToList();
+            foreach(var token in storedToken) {
+                _context.Remove(token);
+                await _context.SaveChangesAsync();
             }
         }
     }

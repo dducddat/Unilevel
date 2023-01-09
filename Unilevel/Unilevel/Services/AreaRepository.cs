@@ -39,7 +39,8 @@ namespace Unilevel.Services
             {
                 throw new Exception("area not exist");
             }
-            var users = _context.Users.Where(u => u.AreaCode == areaCode).ToList();
+            var users = await _context.Users.Where(u => u.AreaCode == areaCode).ToListAsync();
+            var distributors = await _context.Distributors.Where(d => d.AreaCore == areaCode).ToListAsync();
             if (users != null)
             {
                 foreach (var user in users)
@@ -49,6 +50,16 @@ namespace Unilevel.Services
                     await _context.SaveChangesAsync();
                 }
             }
+            if (distributors != null)
+            {
+                foreach (var dis in distributors)
+                {
+                    dis.AreaCore = null;
+                    _context.Distributors.Update(dis);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             _context.Remove(area);
             await _context.SaveChangesAsync();
         }
@@ -68,21 +79,39 @@ namespace Unilevel.Services
             return _mapper.Map<List<AreaInfor>>(areas);
         }
 
-        //public async Task<AreaDetailDTO> GetAreaAsync(int id)
-        //{
-        //    var area = await _context.Areas.FindAsync(id);
+        public async Task<AreaDetail> GetAreaAsync(string areaCode)
+        {
+            var area = await _context.Areas.FindAsync(areaCode);
 
-        //    if (area == null) { throw new Exception("area not exist"); }
+            if (area == null) { throw new Exception("area not exist"); }
 
-        //    var distributors = await _context.Distributors.Where(d => d.AreaId == id).ToListAsync();
+            var distributors = await _context.Distributors.Where(d => d.AreaCore == areaCode).ToListAsync();
+            List<ViewDis> disLst = new List<ViewDis>();
+            foreach (var distributor in distributors)
+            {
+                disLst.Add(new ViewDis { 
+                    Id = distributor.Id,
+                    Name = distributor.Name,
+                    Address = distributor.Address,
+                    Email= distributor.Email,
+                    PhoneNumber = distributor.PhoneNumber,
+                });
+            }
 
-        //    var distributorLst = _mapper.Map<List<DistributorDTO>>(distributors);
+            var users = await _context.Users.Where(u => u.AreaCode == areaCode).Include(u => u.Role).ToListAsync();
+            List<UserInfo> userLst = new List<UserInfo>();
+            foreach (var user in users)
+            {
+                userLst.Add(new UserInfo
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    FullName = user.FullName,
+                    RoleName = user.Role.Name
+                });
+            }
 
-        //    var users = await _context.Users.Where(u => u.AreaId == id).Include(u => u.Role).ToListAsync();
-
-        //    var usersLst = _mapper.Map<List<UserLoginDTO>>(users);
-
-        //    return new AreaDetailDTO() { Id = area.Id, AreaCode = area.AreaCode, Name = area.Name, Distributors = distributorLst };
-        //}
+            return new AreaDetail() { AreaCode = area.AreaCode, Name = area.Name, Distributors = disLst, Users = userLst };
+        }
     }
 }

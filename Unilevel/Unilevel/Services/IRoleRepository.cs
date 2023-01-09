@@ -8,5 +8,6 @@ namespace Unilevel.Services
         public Task<List<RoleDetail>> GetAllRolesAsync();
         public Task AddRoleAsync(AddOrEditRole role);
         public Task EditRoleAsync(AddOrEditRole role, string roleId);
+        public Task DeleteRoleAsync(string roleId);
     }
 }

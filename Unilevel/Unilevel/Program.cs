@@ -18,6 +18,10 @@ builder.Services.AddScoped<IAreaRepository, AreaRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailServices, EmailServices>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+
+builder.Services.AddHttpContextAccessor();
 //builder.Services.AddScoped<IDistributorRepository, DistributorRepository>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(option =>
@@ -28,7 +32,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidateAudience = false,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-        .GetBytes(builder.Configuration.GetSection("SecretKey").Value))
+        .GetBytes(builder.Configuration.GetSection("SecretKey").Value)),
+
+        ClockSkew = TimeSpan.Zero
     };
 });
 

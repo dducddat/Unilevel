@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml;
 using System.Data;
+using System.Security.Claims;
 using Unilevel.Helpers;
 using Unilevel.Models;
 using Unilevel.Services;
@@ -12,30 +14,34 @@ namespace Unilevel.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly IUserService _userService;
 
-        public UserController(IUserRepository userRepository)
+        public UserController(IUserRepository userRepository, IUserService userService)
         {
             _userRepository = userRepository;
+            _userService = userService;
         }
 
-        // GET: User/User-List
-        [HttpGet("User-List")]
+        // GET: User/List
+        [HttpGet("List")]
+        [Authorize]
         public async Task<IActionResult> GetAllUser()
         {
             var users = await _userRepository.GetAllUserAsync();
             return Ok(users);
         }
 
-        // GET: User/Users-Not-In-Area
-        [HttpGet("Users-Not-In-Area")]
+        // GET: User/List/NotInArea
+        [HttpGet("List/NotInArea")]
+        [Authorize(Roles = "Owner, Administrator")]
         public async Task<IActionResult> GetAllUserNotInArea()
         {
             var users = await _userRepository.GetAllUsersNotInAreaAsync();
             return Ok(users);
         }
 
-        // POST: User/Create-User
-        [HttpPost("Create-User")]
+        // POST: User/Create
+        [HttpPost("Create")]
         public async Task<IActionResult> CreateUser(AddUser user)
         {
             try
@@ -54,6 +60,7 @@ namespace Unilevel.Controllers
             }
         }
 
+        // POST: User/Login
         [HttpPost("Login")]
         public async Task<IActionResult> Login(UserLogin user)
         {
@@ -68,8 +75,33 @@ namespace Unilevel.Controllers
             }
         }
 
-        // DELETE: User/Delete-User/{id}
-        [HttpDelete("Delete-User/{id}")]
+        [HttpDelete("Logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout()
+        {
+            var userId = _userService.GetUserId();
+            await _userRepository.Logout(userId);
+            return Ok();
+        }
+
+        // POST: User/RefreshToken
+        [HttpPost("RefreshToken")]
+        public async Task<IActionResult> RefreshToken(TokenModel token)
+        {
+            try
+            {
+                var newToken = await _userRepository.RefreshTokenAsync(token);
+                return Ok(new {success = true, message = "success", data = newToken});
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new APIRespone(false, ex.Message));
+            }
+        }
+
+        // DELETE: User/Delete/{id}
+        [HttpDelete("Delete/{id}")]
+        [Authorize(Roles = "Owner, Administrator")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             try
@@ -83,8 +115,9 @@ namespace Unilevel.Controllers
             }
         }
 
-        // PUT: User/Add-User-Into-Area/{areaCode}/{id}
-        [HttpPut("Add-User-Into-Area/{areaCode}/{id}")]
+        // PUT: User/AddToArea/{areaCode}/{id}
+        [HttpPut("AddToArea/{areaCode}/{id}")]
+        [Authorize(Roles = "Owner, Administrator")]
         public async Task<IActionResult> AddUserIntoArea(string areaCode, string id)
         {
             try
@@ -98,8 +131,9 @@ namespace Unilevel.Controllers
             }
         }
 
-        // DELETE: User/Delete-User-From-Area/{id}
-        [HttpDelete("Delete-User-From-Area/{id}")]
+        // DELETE: User/RemoveFromArea/{id}
+        [HttpDelete("RemoveFromArea/{id}")]
+        [Authorize(Roles = "Owner, Administrator")]
         public async Task<IActionResult> RemoveUserFromArea(string id)
         {
             try
@@ -113,13 +147,15 @@ namespace Unilevel.Controllers
             }
         }
 
-        // PUT: User/Edit-Info-User/{id}
-        [HttpPut("Edit-Info-User/{id}")]
-        public async Task<IActionResult> EditInfoUser(EditInfoUser user, string id)
+        // PUT: User/EditInfo
+        [HttpPut("EditInfo")]
+        [Authorize]
+        public async Task<IActionResult> EditInfoUser(EditInfoUser user)
         {
             try
             {
-                await _userRepository.EditInfoUserAsync(user, id);
+                var userId = User?.Identity?.Name;
+                await _userRepository.EditInfoUserAsync(user, userId);
                 return Ok(new APIRespone(true, "success"));
             }
             catch (Exception ex)
@@ -128,15 +164,80 @@ namespace Unilevel.Controllers
             }
         }
 
-        [HttpPut("Edit-Role-User/{id}/{roleCode}")]
-        public async Task<IActionResult> EditRoleUser(string id, string roleCode)
+        // PUT: User/EditRole/{id}/{roleId}
+        [HttpPut("EditRole/{id}/{roleId}")]
+        [Authorize(Roles = "Owner, Administrator")]
+        public async Task<IActionResult> EditRoleUser(string id, string roleId)
         {
             try
             {
-                await _userRepository.EditRoleUserAsync(id, roleCode);
+                await _userRepository.EditRoleUserAsync(id, roleId);
                 return Ok(new APIRespone(true, "success"));
             }
             catch (Exception ex)
+            {
+                return BadRequest(new APIRespone(false, ex.Message));
+            }
+        }
+
+        // POST: User/ImportFromFileExcel
+        [HttpPost("ImportFromFileExcel")]
+        [Authorize(Roles = "Owner, Administrator")]
+        public async Task<IActionResult> ImportUserFromFileExcel(IFormFile file)
+        {
+            try
+            {
+                var list = new List<FileExcelUser>();
+                using (var Stream = new MemoryStream())
+                {
+                    await file.CopyToAsync(Stream);
+                    ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+                    using (var package = new ExcelPackage(Stream))
+                    {
+                        ExcelWorksheet worksheet = package.Workbook.Worksheets[0];
+                        var rowcount = worksheet.Dimension.Rows;
+                        for (int row = 2; row <= rowcount; row++)
+                        {
+                            list.Add(new FileExcelUser()
+                            {
+                                FullName = worksheet.Cells[row, 1].Value.ToString().Trim(),
+                                Email = worksheet.Cells[row, 2].Value.ToString().Trim(),
+                                Role = worksheet.Cells[row, 3].Value.ToString().Trim(),
+                                ReportTo = worksheet.Cells[row, 4].Value.ToString().Trim(),
+                            });
+                        }
+                    }
+                }
+                await _userRepository.ImportUserFromFileExcelAsync(list);
+                return Ok(new APIRespone(true, "success"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new APIRespone(false, $"cannot continue to add this user and the rest of the users because this user is incorrect: { ex.Message }"));
+            }
+        }
+
+        // PUT: User/ChangePassword
+        [HttpPut("ChangePassword")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(ChangePass change)
+        {
+            try
+            {
+                if (change.Password == string.Empty || change.NewPassword == string.Empty || change.ConfirmNewPassword == string.Empty)
+                {
+                    return BadRequest(new APIRespone(false, "invalid password/new password/ confirm new password"));
+                }
+                if (change.NewPassword != change.ConfirmNewPassword)
+                {
+                    return BadRequest(new APIRespone(false, "new password and receive new password is not the same"));
+                }
+                var userId = _userService.GetUserId();
+                await _userRepository.ChangePasswordAsync(userId, change.Password, change.NewPassword);
+                return Ok(new APIRespone(true, "success"));
+            }
+            catch(Exception ex)
             {
                 return BadRequest(new APIRespone(false, ex.Message));
             }

@@ -16,30 +16,30 @@ namespace Unilevel.Controllers
             _areaRepo = areaRepo;
         }
 
-        // GET: Area/Area-List
-        [HttpGet("Area-List")]
+        // GET: Area/List
+        [HttpGet("List")]
          public async Task<IActionResult> GetAllArea()
         {
             return Ok(await _areaRepo.GetAllAreaAsync());
         }
 
-        // GET: Area/GetAreaById/id
-        //[HttpGet("GetAreaById/{id}")]
-        // public async Task<IActionResult> GetAreaById(int id)
-        // {
-        //     try
-        //     {
-        //         var area = await _areaRepo.GetAreaAsync(id);
-        //         return Ok(area);
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return NotFound(new { error = ex.Message });
-        //     }
-        // }
+        // GET: Area/Detail/{areaCode}
+        [HttpGet("Detail/{areaCode}")]
+         public async Task<IActionResult> GetAreaById(string areaCode)
+        {
+            try
+            {
+                var area = await _areaRepo.GetAreaAsync(areaCode);
+                return Ok(area);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+        }
 
-        // POST: Area/Create-Area
-        [HttpPost("Create-Area")]
+        // POST: Area/Create
+        [HttpPost("Create")]
         public async Task<IActionResult> AddArea(AddOrEditArea area)
         {
             try
@@ -57,8 +57,8 @@ namespace Unilevel.Controllers
             catch (Exception ex) { return Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError); }
         }
 
-        // PUT: Area/Edit-Area/{areaCode}
-        [HttpPut("Edit-Area/{areaCode}")]
+        // PUT: Area/Edit/{areaCode}
+        [HttpPut("Edit/{areaCode}")]
         public async Task<IActionResult> EditArea(AddOrEditArea area, string areaCode)
         {
             try
@@ -76,7 +76,8 @@ namespace Unilevel.Controllers
             }
         }
 
-        [HttpDelete("Delete-Area/{areaCode}")]
+        // DELETE: Area/Delete/{areaCode}
+        [HttpDelete("Delete/{areaCode}")]
         public async Task<IActionResult> DeleteArea(string areaCode)
         {
             try

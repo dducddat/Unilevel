@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 using Unilevel.Data;
 using Unilevel.Helpers;
 using Unilevel.Models;
@@ -19,18 +20,16 @@ namespace Unilevel.Controllers
             _roleRepository = roleRepository;
         }
 
-        // GET: Role/Role-List
-        [HttpGet("Role-List")]
-        [Authorize]
+        // GET: Role/List
+        [HttpGet("List")]
         public async Task<IActionResult> GetAllRole()
         {
             var roles = await _roleRepository.GetAllRolesAsync();
             return Ok(roles);
         }
 
-        // POST: Role/Create-Role
-        [HttpPost("Create-Role")]
-        [Authorize]
+        // POST: Role/Create
+        [HttpPost("Create")]
         public async Task<IActionResult> AddRole(AddOrEditRole role)
         {
             try
@@ -45,14 +44,18 @@ namespace Unilevel.Controllers
                     return Problem(detail: "names cannot be blank", statusCode: StatusCodes.Status400BadRequest);
                 }
             }
+            catch (DuplicateNameException dex)
+            {
+                return Problem(detail: dex.Message, statusCode: StatusCodes.Status400BadRequest);
+            }
             catch (Exception ex)
             {
                 return Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError);
             }
         }
 
-        // POST: Role/Edit-Role/{roleId}
-        [HttpPut("Edit-Role/{roleId}")]
+        // PUT: Role/Edit/{roleId}
+        [HttpPut("Edit/{roleId}")]
         public async Task<IActionResult> EditRole(AddOrEditRole role, string roleId)
         {
             try
@@ -65,6 +68,21 @@ namespace Unilevel.Controllers
                 return BadRequest(new APIRespone(false, "name connot be blank"));
             }
             catch (Exception ex)
+            {
+                return BadRequest(new APIRespone(false, ex.Message));
+            }
+        }
+
+        // DELETE: Role/Delete/{roleId}
+        [HttpDelete("Delete/{roleId}")]
+        public async Task<IActionResult> DeleteRole(string roleId)
+        {
+            try
+            {
+                await _roleRepository.DeleteRoleAsync(roleId);
+                return Ok(new APIRespone(true, "success"));
+            }
+            catch(Exception ex)
             {
                 return BadRequest(new APIRespone(false, ex.Message));
             }

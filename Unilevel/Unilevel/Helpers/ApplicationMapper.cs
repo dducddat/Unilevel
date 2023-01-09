@@ -15,7 +15,6 @@ namespace Unilevel.Helpers
                                         .ForMember(des => des.Name,
                 act => act.MapFrom(src => src.Name))
                                         .ReverseMap();
-            CreateMap<Distributor, DistributorModel>().ReverseMap();
         }
     }
 }
