@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Unilevel.Helpers;
+﻿using Microsoft.AspNetCore.Mvc;
 using Unilevel.Models;
 using Unilevel.Services;
 
@@ -17,31 +15,70 @@ namespace Unilevel.Controllers
             _questionRepository = questionRepository;
         }
 
+        // GET: Question/List
         [HttpGet("List")]
         public async Task<IActionResult> GetAllQues()
         {
-            var questions = await _questionRepository.GetAllQuestion();
+            var questions = await _questionRepository.GetAllQuestionAsync();
             return Ok(questions);
         }
 
+        // GET: Question/List/NotAddSurveyOrRemove
         [HttpGet("List/NotAddSurveyOrRemove")]
         public async Task<IActionResult> GetAllQuesNotAddSurveyOrRemove()
         {
-            var questions = await _questionRepository.GetQuesNotAddSurveyOrRemove();
+            var questions = await _questionRepository.GetQuesNotAddSurveyOrRemoveAsync();
             return Ok(questions);
         }
 
+        // GET: Question/QuestionDetails
+        [HttpGet("Details")]
+        public async Task<IActionResult> QuestionDetails(string quesId)
+        {
+            try
+            {
+                var questions = await _questionRepository.QuestionDetailAsync(quesId);
+                return Ok(questions);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        // DELETE: Question/Remove/{quesId}
         [HttpDelete("Remove/{quesId}")]
         public async Task<IActionResult> RemoveQues(string quesId)
         {
             try
             {
-                await _questionRepository.RemoveQuestion(quesId);
-                return Ok(new APIRespone(true, "success"));
+                await _questionRepository.RemoveQuestionAsync(quesId);
+                return Ok(new {Message = "Successful delete" });
             }
             catch(Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        // PUT: Question/Edit/{quesId}
+        [HttpPut("Edit/{quesId}")]
+        public async Task<IActionResult> EditQuestion(AddOrEditQuestion question ,string quesId)
+        {
+            try
+            {
+                if (question.Title == string.Empty || question.AnswerA == string.Empty
+                                                   || question.AnswerB == string.Empty
+                                                   || question.AnswerC == string.Empty
+                                                   || question.AnswerD == string.Empty)
+                    { return BadRequest(new { Error = "Invalid input" }); }
+
+                await _questionRepository.EditQuestionAsync(question, quesId);
+                return Ok(new {Message = "Edit successfully"});
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new {Error = ex.Message});
             }
         }
 
@@ -52,13 +89,13 @@ namespace Unilevel.Controllers
             try
             {
                 if (question.Title == string.Empty || question.AnswerA == string.Empty
-                                               || question.AnswerB == string.Empty
-                                               || question.AnswerC == string.Empty
-                                               || question.AnswerD == string.Empty)
-                { return BadRequest(new APIRespone(false, "Invalid input")); }
+                                                   || question.AnswerB == string.Empty
+                                                   || question.AnswerC == string.Empty
+                                                   || question.AnswerD == string.Empty)
+                    { return BadRequest(new {Error = "Invalid input"}); }
 
                 await _questionRepository.AddQuestionAsync(question);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new {Message = "Successfully added new" });
             }
             catch (Exception ex)
             {

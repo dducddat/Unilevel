@@ -65,7 +65,7 @@ namespace Unilevel.Services
             _emailService.SendEmail(email);
             CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
 
-            string id = DateTime.Now.ToString("ddMMyyhhmmssfffffff");
+            string id = DateTime.Now.ToString("ddMMyyHHmmssfffffff");
 
             var userID = _context.Users.FirstOrDefault(u => u.Id == id);
             if(userID != null) { throw new Exception("user id already exist, please wait a second and recreate"); }

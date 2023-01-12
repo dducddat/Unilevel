@@ -17,7 +17,7 @@ namespace Unilevel.Services
 
         public async Task AddQuestionAsync(AddOrEditQuestion question)
         {
-            string id = DateTime.Now.ToString("ddMMyyhhmmss");
+            string id = DateTime.Now.ToString("ddMMyyHHmmss");
             if (await _context.Questions.AnyAsync(q => q.Id == id))
                 throw new Exception("Please wait a second and try again");
             _context.Add(new Question
@@ -33,17 +33,6 @@ namespace Unilevel.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task AddQuesToSurvey(string quesId, string surveyId)
-        {
-            var survey = await _context.Surveys.SingleOrDefaultAsync(s => s.Id == surveyId);
-            var ques = await _context.Questions.SingleOrDefaultAsync(q => q.Id == quesId);
-            if (survey is null || ques is null) throw new Exception("Survey or question not found");
-            ques.SurveyId = surveyId;
-            ques.Status = false;
-            _context.Update(ques);
-            _context.SaveChanges();
-        }
-
         public async Task EditQuestionAsync(AddOrEditQuestion question, string quesId)
         {
             var ques = await _context.Questions.SingleOrDefaultAsync(q => q.Id == quesId);
@@ -57,7 +46,7 @@ namespace Unilevel.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<ViewQuestion>> GetAllQuestion()
+        public async Task<List<ViewQuestion>> GetAllQuestionAsync()
         {
             var questions = await _context.Questions.ToListAsync();
             List<ViewQuestion> quesList = new List<ViewQuestion>();
@@ -74,7 +63,7 @@ namespace Unilevel.Services
             return quesList;
         }
 
-        public async Task<List<ViewQuestion>> GetQuesNotAddSurveyOrRemove()
+        public async Task<List<ViewQuestion>> GetQuesNotAddSurveyOrRemoveAsync()
         {
             var questions = await _context.Questions.Where(q => q.Status == true).ToListAsync();
             List<ViewQuestion> quesList = new List<ViewQuestion>();
@@ -90,7 +79,7 @@ namespace Unilevel.Services
             return quesList;
         }
 
-        public async Task<QuestionDetail> GetQuestionById(string quesId)
+        public async Task<QuestionDetail> QuestionDetailAsync(string quesId)
         {
             var ques = await _context.Questions.SingleOrDefaultAsync(q => q.Id == quesId);
             if (ques is null) throw new Exception("Not found");
@@ -101,10 +90,11 @@ namespace Unilevel.Services
                 AnswerA = ques.AnswerA,
                 AnswerB = ques.AnswerB,
                 AnswerC = ques.AnswerC,
-                AnswerD = ques.AnswerD            };
+                AnswerD = ques.AnswerD
+            };
         }
 
-        public async Task RemoveQuestion(string quesId)
+        public async Task RemoveQuestionAsync(string quesId)
         {
             var ques = await _context.Questions.SingleOrDefaultAsync(q => q.Id == quesId);
             if (ques is null) throw new Exception("Question not found");

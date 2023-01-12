@@ -17,5 +17,7 @@ namespace Unilevel.Data
         public DbSet<Unilevel.Data.Area> Areas { get; set; } = default!;
         public DbSet<Unilevel.Data.Question> Questions { get; set; } = default!;
         public DbSet<Unilevel.Data.Survey> Surveys { get; set; } = default!;
+        public DbSet<Unilevel.Data.RequestSurvey> RequestSurveys { get; set; } = default!;
+        public DbSet<Unilevel.Data.ResultSurvey> ResultSurveys { get; set; } = default!;
     }
 }

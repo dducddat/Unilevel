@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Unilevel.Helpers;
 using Unilevel.Models;
 using Unilevel.Services;
 
@@ -34,7 +33,7 @@ namespace Unilevel.Controllers
             }
             catch (Exception ex)
             {
-                return NotFound(new { error = ex.Message });
+                return NotFound(new { Error = ex.Message });
             }
         }
 
@@ -47,11 +46,11 @@ namespace Unilevel.Controllers
                 if (area.AreaName != string.Empty && area.AreaName != null)
                 {
                     await _areaRepo.AddAreaAsync(area);
-                    return Ok(new APIRespone(true, "success"));
+                    return Ok(new { Message = "Successfully added new" });
                 }
                 else
                 {
-                    return BadRequest(new APIRespone(false, "name cannot to blank"));
+                    return BadRequest(new { Error = "name cannot to blank" });
                 }
             }
             catch (Exception ex) { return Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError); }
@@ -65,14 +64,14 @@ namespace Unilevel.Controllers
             {
                 if (area.AreaName == string.Empty && area.AreaName == null) 
                 { 
-                    return BadRequest(new APIRespone(false, "name cannot be blank")); 
+                    return BadRequest(new { Error = "name cannot be blank" }); 
                 }
                 await _areaRepo.EditAreaAsync(area, areaCode);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new {Message = "Edit successfully" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -83,11 +82,11 @@ namespace Unilevel.Controllers
             try
             {
                 await _areaRepo.DeleteAreaAsync(areaCode);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new { Message = "Successful delete" });
             }
             catch(Exception ex) 
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
     }

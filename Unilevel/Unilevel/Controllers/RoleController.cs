@@ -1,9 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Data;
-using Unilevel.Data;
-using Unilevel.Helpers;
 using Unilevel.Models;
 using Unilevel.Services;
 
@@ -37,7 +33,7 @@ namespace Unilevel.Controllers
                 if (role.Name != null && role.Name != string.Empty)
                 {
                     await _roleRepository.AddRoleAsync(role);
-                    return Ok(new APIRespone(true, "success"));
+                    return Ok(new { Message = "Successfully added new" });
                 } 
                 else
                 {
@@ -63,13 +59,13 @@ namespace Unilevel.Controllers
                 if(role.Name != string.Empty && role.Name != null)
                 {
                     await _roleRepository.EditRoleAsync(role, roleId);
-                    return Ok(new APIRespone(true, "success"));
+                    return Ok(new { Message = "Edit successfully" });
                 }
-                return BadRequest(new APIRespone(false, "name connot be blank"));
+                return BadRequest(new { Error = "name connot be blank" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -80,11 +76,11 @@ namespace Unilevel.Controllers
             try
             {
                 await _roleRepository.DeleteRoleAsync(roleId);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new { Message = "Successful delete" });
             }
             catch(Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
     }

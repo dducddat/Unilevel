@@ -19,5 +19,7 @@
     public class QuestionDetail : AddOrEditQuestion
     {
         public string Id { get; set;}
+
+        public string SurveyId { get; set; }
     }
 }

@@ -29,7 +29,7 @@ namespace Unilevel.Services
         {
             var distEmail = _context.Distributors.FirstOrDefault(d => d.Email == distributor.Email);
             if (distEmail != null) { throw new DuplicateNameException("email already exist"); }
-            string id = DateTime.UtcNow.ToString("ddMMyyhhmmss");
+            string id = DateTime.UtcNow.ToString("ddMMyyHHmmss");
             var distId = _context.Distributors.FirstOrDefault(d => d.Id == id);
             if (distId != null) { throw new Exception("distributor id already exist, please wait a second and recreate"); }
 

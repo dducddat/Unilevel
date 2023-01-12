@@ -2,8 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using System.Data;
-using System.Security.Claims;
-using Unilevel.Helpers;
 using Unilevel.Models;
 using Unilevel.Services;
 
@@ -47,12 +45,12 @@ namespace Unilevel.Controllers
             try
             {
                 await _userRepository.CreateUserAsync(user);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new { Message = "success" });
 
             }
             catch (DuplicateNameException nex)
             {
-                return BadRequest(new APIRespone(false, nex.Message));
+                return BadRequest(new { Error = nex.Message });
             }
             catch (Exception ex)
             {
@@ -67,11 +65,11 @@ namespace Unilevel.Controllers
             try
             {
                 var token = await _userRepository.LoginAsync(user);
-                return Ok(new { success = true, message = "logged in successfully", data = token });
+                return Ok(new { Message = "logged in successfully", JWT = token });
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -91,11 +89,11 @@ namespace Unilevel.Controllers
             try
             {
                 var newToken = await _userRepository.RefreshTokenAsync(token);
-                return Ok(new {success = true, message = "success", data = newToken});
+                return Ok(new { Message = "success", JWT = newToken});
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -107,11 +105,11 @@ namespace Unilevel.Controllers
             try
             {
                 await _userRepository.DeleteUserAsync(id);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new { Message = "success" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -123,11 +121,11 @@ namespace Unilevel.Controllers
             try
             {
                 await _userRepository.AddUserIntoAreaAsync(areaCode, id);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new { Message = "success" });
             }
             catch(Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -139,11 +137,11 @@ namespace Unilevel.Controllers
             try
             {
                 await _userRepository.RemoveUserFromAreaAsync(id);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new { Message = "success" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -156,11 +154,11 @@ namespace Unilevel.Controllers
             {
                 var userId = User?.Identity?.Name;
                 await _userRepository.EditInfoUserAsync(user, userId);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new { Message = "success" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -172,11 +170,11 @@ namespace Unilevel.Controllers
             try
             {
                 await _userRepository.EditRoleUserAsync(id, roleId);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new { Message = "success" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -210,11 +208,11 @@ namespace Unilevel.Controllers
                     }
                 }
                 await _userRepository.ImportUserFromFileExcelAsync(list);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new { Message = "success" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, $"cannot continue to add this user and the rest of the users because this user is incorrect: { ex.Message }"));
+                return BadRequest(new { Error = $"cannot continue to add this user and the rest of the users because this user is incorrect: {ex.Message}" });
             }
         }
 
@@ -227,19 +225,19 @@ namespace Unilevel.Controllers
             {
                 if (change.Password == string.Empty || change.NewPassword == string.Empty || change.ConfirmNewPassword == string.Empty)
                 {
-                    return BadRequest(new APIRespone(false, "invalid password/new password/ confirm new password"));
+                    return BadRequest(new { Error = "invalid password/new password/ confirm new password" });
                 }
                 if (change.NewPassword != change.ConfirmNewPassword)
                 {
-                    return BadRequest(new APIRespone(false, "new password and receive new password is not the same"));
+                    return BadRequest(new { Error = "new password and receive new password is not the same" });
                 }
                 var userId = _userService.GetUserId();
                 await _userRepository.ChangePasswordAsync(userId, change.Password, change.NewPassword);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new { Message = "success" });
             }
             catch(Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
     }

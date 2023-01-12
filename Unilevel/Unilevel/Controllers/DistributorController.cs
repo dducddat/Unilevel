@@ -1,10 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Utilities.Encoders;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Data;
-using Unilevel.Data;
-using Unilevel.Helpers;
 using Unilevel.Models;
 using Unilevel.Services;
 
@@ -36,14 +31,14 @@ namespace Unilevel.Controllers
             {
                 if (distributor.Name == string.Empty || distributor.Email == string.Empty  || distributor.Address == string.Empty || distributor.PhoneNumber == string.Empty)
                 {
-                    return BadRequest(new APIRespone(false, "name/email/address/phone number cannot be blank"));
+                    return BadRequest(new { Error = "name/email/address/phone number cannot be blank" });
                 }
                 await _distributorRepository.AddDistributorAsync(distributor);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new {Message = "Successfully added new" });
             }
             catch (DuplicateNameException dex)
             {
-                return Ok(new APIRespone(false, dex.Message));
+                return Ok(new { Error = dex.Message });
             }
             catch (Exception ex)
             {
@@ -66,11 +61,11 @@ namespace Unilevel.Controllers
             try
             {
                 await _distributorRepository.AddDisIntoAreaAsync(areaCode, disId);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new {Message = "successful" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -81,11 +76,11 @@ namespace Unilevel.Controllers
             try
             {
                 await _distributorRepository.RemoveDisFromAreaAsync(disId);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new {Message = "Edit successfully" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -96,11 +91,11 @@ namespace Unilevel.Controllers
             try
             {
                 await _distributorRepository.RemoveDistributorAsync(disId);
-                return Ok(new APIRespone(true, "success"));
+                return Ok(new {Message = "Successful delete" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new APIRespone(false, ex.Message));
+                return BadRequest(new { Error = ex.Message });
             }
         }
     }

@@ -19,7 +19,7 @@ namespace Unilevel.Services
 
         public async Task AddRoleAsync(AddOrEditRole role)
         {
-            string id = DateTime.Now.ToString("ddMMyyhhmmss");
+            string id = DateTime.Now.ToString("ddMMyyHHmmss");
             var roleId = await _context.Roles.AnyAsync(r => r.Id == id);
             var roleName = await _context.Roles.AnyAsync(r => r.Name == role.Name && r.Remove == false);
             if (roleId) { throw new Exception("role already exist, please wait a second and recreate"); }

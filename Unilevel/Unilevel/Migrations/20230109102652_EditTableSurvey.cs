@@ -4,13 +4,13 @@
 
 namespace Unilevel.Migrations
 {
-    public partial class EditRole : Migration
+    public partial class EditTableSurvey : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<bool>(
                 name: "Remove",
-                table: "Roles",
+                table: "Surveys",
                 type: "bit",
                 nullable: false,
                 defaultValue: false);
@@ -20,7 +20,7 @@ namespace Unilevel.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "Remove",
-                table: "Roles");
+                table: "Surveys");
         }
     }
 }

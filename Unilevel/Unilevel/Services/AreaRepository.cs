@@ -21,7 +21,7 @@ namespace Unilevel.Services
         {
             Area areaNew = new Area()
             {
-                AreaCode = "COD" + DateTime.Now.ToString("ddMMyyhhmmss"),
+                AreaCode = "COD" + DateTime.Now.ToString("ddMMyyHHmmss"),
                 Name = area.AreaName
             };
             var ar = _context.Areas.SingleOrDefault(a => a.AreaCode == areaNew.AreaCode);

@@ -20,6 +20,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailServices, EmailServices>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
 
 builder.Services.AddHttpContextAccessor();
 //builder.Services.AddScoped<IDistributorRepository, DistributorRepository>();
@@ -54,7 +55,6 @@ builder.Services.AddSwaggerGen(option =>
     });
     option.OperationFilter<SecurityRequirementsOperationFilter>();
 }
-
 );
 
 var app = builder.Build();

@@ -142,6 +142,69 @@ namespace Unilevel.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
+            modelBuilder.Entity("Unilevel.Data.RequestSurvey", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SurveyId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RequestSurveys");
+                });
+
+            modelBuilder.Entity("Unilevel.Data.ResultSurvey", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("QuestionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("ResultA")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ResultB")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ResultC")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ResultD")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SurveyId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionId");
+
+                    b.HasIndex("SurveyId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ResultSurveys");
+                });
+
             modelBuilder.Entity("Unilevel.Data.Role", b =>
                 {
                     b.Property<string>("Id")
@@ -164,13 +227,16 @@ namespace Unilevel.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("NumberOfPeopleDid")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("StartDate")
+                    b.Property<bool>("Remove")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Title")
@@ -192,6 +258,9 @@ namespace Unilevel.Migrations
 
                     b.Property<string>("AreaCode")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Avatar")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
@@ -271,6 +340,44 @@ namespace Unilevel.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Unilevel.Data.RequestSurvey", b =>
+                {
+                    b.HasOne("Unilevel.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Unilevel.Data.ResultSurvey", b =>
+                {
+                    b.HasOne("Unilevel.Data.Question", "Question")
+                        .WithMany()
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Unilevel.Data.Survey", "Survey")
+                        .WithMany()
+                        .HasForeignKey("SurveyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Unilevel.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Question");
+
+                    b.Navigation("Survey");
 
                     b.Navigation("User");
                 });
