@@ -89,8 +89,8 @@ namespace Unilevel.Services
         public async Task<TokenModel> LoginAsync(UserLogin user)
         {
             if (user.Email == string.Empty || user.Password == string.Empty) { throw new Exception("invalid username/password"); }
-            var us = await _context.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == user.Email);
-            if (us == null) { throw new Exception("user not found"); }
+            var us = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
+            if (us == null) { throw new Exception("invalid username/password"); }
             if (!VeryfiPasswordHash(user.Password, us.PasswordHash, us.PasswordSalt))
             {
                 throw new Exception("wrong password");
@@ -170,7 +170,7 @@ namespace Unilevel.Services
                     new Claim(ClaimTypes.Name, user.FullName),
                     new Claim(JwtRegisteredClaimNames.Email, user.Email),
                     new Claim(JwtRegisteredClaimNames.Jti, JwtId),
-                    new Claim(ClaimTypes.Role, user.Role.Name)
+                    new Claim(ClaimTypes.Role, user.RoleId)
                 }),
                 Expires = DateTime.Now.AddHours(12),
                 SigningCredentials = signinCredentials
@@ -231,23 +231,6 @@ namespace Unilevel.Services
             return lstUser;
         }
 
-        public async Task<List<UserInfo>> GetAllUsersNotInAreaAsync()
-        {
-            var users = await _context.Users.Include(u => u.Role).Where(u => u.AreaCode == null).ToListAsync();
-            List<UserInfo> listUsers = new List<UserInfo>();
-            foreach (var user in users)
-            {
-                listUsers.Add(new UserInfo
-                {
-                    Id = user.Id,
-                    FullName = user.FullName,
-                    Email = user.Email,
-                    RoleName = user.Role.Name,
-                });
-            }  
-            return listUsers;
-        }
-
         public async Task DeleteUserAsync(string id)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
@@ -255,26 +238,6 @@ namespace Unilevel.Services
             user.Status = false;
             _context.Update(user);
             _context.SaveChanges();
-        }
-
-        public async Task AddUserIntoAreaAsync(string areaCode, string id)
-        {
-            var area = await _context.Areas.FirstOrDefaultAsync(a => a.AreaCode == areaCode);
-            if (area == null) { throw new Exception("area not exist"); }
-            var user = await _context.Users.SingleOrDefaultAsync(u => u.Id == id);
-            if (user == null) { throw new Exception("user not exist"); }
-            user.AreaCode = areaCode;
-            _context.Update(user);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task RemoveUserFromAreaAsync(string id)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
-            if (user == null) { throw new Exception("user not exist"); }
-            user.AreaCode = null; 
-            _context.Update(user);
-            await _context.SaveChangesAsync();
         }
 
         public async Task EditInfoUserAsync(EditInfoUser user, string id)
@@ -367,6 +330,98 @@ namespace Unilevel.Services
             var storedToken = _context.RefreshTokens.Where(r => r.UserId == userId).ToList();
             foreach(var token in storedToken) {
                 _context.Remove(token);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<List<SurveyList>> GetAllSurveyOfUserIdAsync(string userId)
+        {
+            var user = await _context.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
+            if (user == null)
+                throw new Exception("User not found");
+
+            var requestSurveys = await _context.RequestSurveys.Where(rs => rs.UserId == userId)
+                                                              .Where(rs => rs.Status == false)
+                                                              .Join(_context.Surveys,
+                                                                     rs => rs.SurveyId,
+                                                                     s => s.Id,
+                                                                     (rs, s) => new {
+                                                                         SurveyId = rs.SurveyId,
+                                                                         Title = s.Title,
+                                                                         EndDate = s.EndDate
+                                                                     })
+                                                              .ToListAsync();
+
+            List<SurveyList> surveys = new List<SurveyList>();
+            foreach (var requestSurey in requestSurveys)
+            {
+                surveys.Add(new SurveyList()
+                {
+                    SurveyId = requestSurey.SurveyId,
+                    TitleSurvey = requestSurey.Title,
+                    EndDate = requestSurey.EndDate
+                });
+            }
+
+            return surveys;
+        }
+
+        public async Task<List<QuestionDetail>> GetAllQuestionBySurveyIdAsync(string surveyId)
+        {
+            var questions = await _context.Questions.Where(q => q.SurveyId == surveyId).ToListAsync();
+
+            List<QuestionDetail> ListQuestion = new List<QuestionDetail>();
+
+            if (questions != null)
+            {
+                foreach (var question in questions)
+                {
+                    ListQuestion.Add(new QuestionDetail
+                    {
+                        Id = question.Id,
+                        Title = question.Title,
+                        AnswerA = question.AnswerA,
+                        AnswerB = question.AnswerB,
+                        AnswerC = question.AnswerC,
+                        AnswerD = question.AnswerD,
+                        SurveyId = question.SurveyId
+                    });
+                }
+            }
+
+            return ListQuestion;
+        }
+
+        public async Task UserSendResultSurveyAsync(ResultSurveyModel resultSurvey, string userId)
+        {
+            var requestSurvey = await _context.RequestSurveys
+                .Where(rs => rs.SurveyId == resultSurvey.SurveyId)
+                .Where(rs => rs.UserId == userId)
+                .SingleOrDefaultAsync();
+
+            if (requestSurvey is null)
+                throw new Exception("Request survey not found");
+            else if (requestSurvey.Status == true)
+                throw new Exception("User who have taken the survey");
+
+            requestSurvey.Status = true;
+
+            _context.Update(requestSurvey);
+            await _context.SaveChangesAsync();
+
+            foreach (var result in resultSurvey.Results)
+            {
+                _context.Add(new ResultSurvey
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    UserId = userId,
+                    QuestionId = result.QuestionId,
+                    ResultA = result.ResultA,
+                    ResultB = result.ResultB,
+                    ResultC = result.ResultC,
+                    ResultD = result.ResultD,
+                    SurveyId = resultSurvey.SurveyId
+                });
                 await _context.SaveChangesAsync();
             }
         }

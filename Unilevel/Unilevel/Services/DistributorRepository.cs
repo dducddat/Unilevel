@@ -14,17 +14,6 @@ namespace Unilevel.Services
             _context = context;
         }
 
-        public async Task AddDisIntoAreaAsync(string areaCode, string disId)
-        {
-            var area = await _context.Areas.FirstOrDefaultAsync(a => a.AreaCode == areaCode);
-            if (area == null) { throw new Exception("area not exist"); }
-            var dis = await _context.Distributors.SingleOrDefaultAsync(d => d.Id == disId);
-            if (dis == null) throw new Exception("Distributor not exist");
-            dis.AreaCore = areaCode;
-            _context.Update(dis);
-            await _context.SaveChangesAsync();
-        }
-
         public async Task AddDistributorAsync(AddDis distributor)
         {
             var distEmail = _context.Distributors.FirstOrDefault(d => d.Email == distributor.Email);
@@ -45,25 +34,6 @@ namespace Unilevel.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<ViewDis>> GetAllDisNotInAreaAsync()
-        {
-            var distributors = await _context.Distributors.Where(d => d.Remove == false)
-                                                          .Where(d => d.AreaCore == null).ToListAsync();
-            List<ViewDis> listD = new List<ViewDis>();
-            foreach (var item in distributors)
-            {
-                listD.Add(new ViewDis
-                {
-                    Id = item.Id,
-                    Address = item.Address,
-                    Email = item.Email,
-                    PhoneNumber = item.PhoneNumber,
-                    Name = item.Name,
-                });
-            }
-            return listD;
-        }
-
         public async Task<List<ViewDis>> GetAllDistributorAsync()
         {
             var distributors = await _context.Distributors.Where(d => d.Remove == false).ToListAsync();
@@ -80,15 +50,6 @@ namespace Unilevel.Services
                 });
             }
             return listD;
-        }
-
-        public async Task RemoveDisFromAreaAsync(string disId)
-        {
-            var dis = await _context.Distributors.SingleOrDefaultAsync(d => d.Id == disId);
-            if (dis == null) throw new Exception("Distributor not exist");
-            dis.AreaCore = null;
-            _context.Update(dis);
-            await _context.SaveChangesAsync();
         }
 
         public async Task RemoveDistributorAsync(string distributorId)

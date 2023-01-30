@@ -9,6 +9,5 @@ namespace Unilevel.Services
         public Task<QuestionDetail> QuestionDetailAsync(string quesId);
         public Task<List<ViewQuestion>> GetAllQuestionAsync();
         public Task RemoveQuestionAsync(string quesId);
-        public Task<List<ViewQuestion>> GetQuesNotAddSurveyOrRemoveAsync();
     }
 }

@@ -28,6 +28,23 @@ namespace Unilevel.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task AddPermissionOnRoleAsync(AddLinkRoleMenu linkRoleMenu)
+        {
+            _context.Add(new LinkRoleMenu { RoleId = linkRoleMenu.RoleId, MenuId = linkRoleMenu.MenuId });
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeletePermissionOnRoleAsync(int id)
+        {
+            var linkRoleMenu = await _context.LinkRoleMenus.SingleOrDefaultAsync(lrm => lrm.Id == id);
+
+            if (linkRoleMenu is null)
+                throw new Exception("Not found");
+
+            _context.Remove(linkRoleMenu);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task DeleteRoleAsync(string roleId)
         {
             var role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
@@ -56,6 +73,34 @@ namespace Unilevel.Services
                 await _context.SaveChangesAsync();
             }
             else { throw new Exception("name already exist"); }
+        }
+
+        public async Task<List<MenuModel>> GetAllMenuAsync()
+        {
+            var menus = await _context.Menus.ToListAsync();
+            return _mapper.Map<List<MenuModel>>(menus);
+        }
+
+        public async Task<List<LinkRoleMenuModel>> GetAllPermissionOnRoleAsync()
+        {
+            var linkRoleMenus = await _context.LinkRoleMenus.Include(lrm => lrm.Role)
+                                                            .Include(lrm => lrm.Menu)
+                                                            .ToListAsync();
+
+            List<LinkRoleMenuModel> listLinkRoleMenu = new List<LinkRoleMenuModel>();
+
+            foreach (var item in linkRoleMenus)
+            {
+                listLinkRoleMenu.Add(new LinkRoleMenuModel {
+                    Id = item.Id,
+                    RoleId = item.RoleId,
+                    RoleName = item.Role.Name,
+                    MenuId = item.MenuId,
+                    MenuPermission = item.Menu.Permission
+                });
+            }
+
+            return listLinkRoleMenu;
         }
 
         public async Task<List<RoleDetail>> GetAllRolesAsync()

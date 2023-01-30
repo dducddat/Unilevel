@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Unilevel.Data;
 using Unilevel.Models;
 using Unilevel.Services;
 
@@ -57,11 +59,27 @@ namespace Unilevel.Controllers
 
         // POST: Survey/Create
         [HttpPost("Create")]
-        public async Task<IActionResult> RequestSurvey(AddOrEditSurvey survey)
+        public async Task<IActionResult> CreateSurvey(AddOrEditSurvey survey)
         {
             if (survey.Title == string.Empty) return BadRequest(new { Error = "Title cannot be blank" });
             var result = await _surveyRepository.CreateSurveyAsync(survey);
             return Ok(result);
+        }
+
+        // PUT: Survey/Edit/{surveyId}
+        [HttpPut("Edit/{surveyId}")]
+        public async Task<IActionResult> EditSurvey(AddOrEditSurvey survey, string surveyId)
+        {
+           try
+            {
+                if (survey.Title == string.Empty) return BadRequest(new { Error = "Title cannot be blank" });
+                await _surveyRepository.EditSurveyAsync(survey, surveyId);
+                return Ok(new { Message = "Success" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new {Error = ex.Message});
+            }
         }
 
         // POST: Survey/AddQuestion/{surveyId}
@@ -142,42 +160,21 @@ namespace Unilevel.Controllers
             }
         }
 
-        // GET: Survey/AllSurveyOfUser
-        [HttpGet("AllSurveyOfUser")]
-        public async Task<IActionResult> GetAllSurveyOfUserId(string userId)
+        // GET: Survey/UserResultSurveyInfor/{userId}/{surveyId}}
+        [HttpGet("UserResultSurveyInfor/{userId}/{surveyId}")]
+        public async Task<IActionResult> UserResultSurveyInfor(string userId, string surveyId)
         {
-            try
-            {
-                var surveys = await _surveyRepository.GetAllSurveyOfUserIdAsync(userId);
-                return Ok(surveys);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Error = ex.Message });
-            }
+            var list = await _surveyRepository.UserSurveyResultsInforAsync(userId, surveyId);
+
+            return Ok(list);
         }
 
-        // GET: Survey/QuestionOfSurveyId/{surveyId}
-        [HttpGet("QuestionOfSurveyId/{surveyId}")]
-        public async Task<IActionResult> GetAllQuestionBySurveyId(string surveyId)
+        // GET: Survey/ListQuestion
+        [HttpGet("ListQuestion")]
+        public async Task<IActionResult> GetAllQuesNotAddSurveyOrRemove()
         {
-            var listQuestion = await _surveyRepository.GetAllQuestionBySurveyIdAsync(surveyId);
-
-            return Ok(listQuestion);
-        }
-
-        [HttpPost("ResultSurvey/{userId}")]
-        public async Task<IActionResult> ResultSurveyOfUser(ResultSurveyModel resultSurvey, string userId)
-        {
-            try
-            {
-                await _surveyRepository.ResultSurveyOfUserAsync(resultSurvey, userId);
-                return Ok(new { Message = "Successful survey" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Error = ex.Message });
-            }
+            var questions = await _surveyRepository.GetQuesNotAddSurveyOrRemoveAsync();
+            return Ok(questions);
         }
     }
 }

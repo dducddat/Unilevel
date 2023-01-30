@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Unilevel.Models;
 using Unilevel.Services;
@@ -7,6 +8,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(Policy = "CanManageRole")]
     public class RoleController : ControllerBase
     {
         private readonly IRoleRepository _roleRepository;
@@ -48,6 +50,49 @@ namespace Unilevel.Controllers
             {
                 return Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError);
             }
+        }
+
+        // Post: Role/AddPermissionOnRole
+        [HttpPost("AddPermissionOnRole")]
+        public async Task<IActionResult> AddPermissionOnRole(AddLinkRoleMenu linkRoleMenu)
+        {
+            await _roleRepository.AddPermissionOnRoleAsync(linkRoleMenu);
+
+            return Ok();
+        }
+
+        // DELETE: Role/DeletePermissionOnRole/{id}
+        [HttpDelete("DeletePermissionOnRole/{id}")]
+        public async Task<IActionResult> DeletePermissionOnRole(int id)
+        {
+            try
+            {
+                await _roleRepository.DeletePermissionOnRoleAsync(id);
+
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        // GET: Role/ListPermissionOnRole
+        [HttpGet("ListPermissionOnRole")]
+        public async Task<IActionResult> GetAllPermissionOnRole()
+        {
+            var linkRoleMenus = await _roleRepository.GetAllPermissionOnRoleAsync();
+
+            return Ok(linkRoleMenus);
+        }
+
+        // GET: Role/ListMenu
+        [HttpGet("ListMenu")]
+        public async Task<IActionResult> GetAllMenu()
+        {
+            var menus = await _roleRepository.GetAllMenuAsync();
+
+            return Ok(menus);
         }
 
         // PUT: Role/Edit/{roleId}

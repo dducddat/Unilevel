@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using System.Data;
+using System.Security.Claims;
 using Unilevel.Models;
 using Unilevel.Services;
 
@@ -12,34 +13,24 @@ namespace Unilevel.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
-        private readonly IUserService _userService;
 
-        public UserController(IUserRepository userRepository, IUserService userService)
+        public UserController(IUserRepository userRepository)
         {
             _userRepository = userRepository;
-            _userService = userService;
         }
 
         // GET: User/List
         [HttpGet("List")]
-        [Authorize]
+        [Authorize(Policy = "CanManageUser")]
         public async Task<IActionResult> GetAllUser()
         {
             var users = await _userRepository.GetAllUserAsync();
             return Ok(users);
         }
 
-        // GET: User/List/NotInArea
-        [HttpGet("List/NotInArea")]
-        [Authorize(Roles = "Owner, Administrator")]
-        public async Task<IActionResult> GetAllUserNotInArea()
-        {
-            var users = await _userRepository.GetAllUsersNotInAreaAsync();
-            return Ok(users);
-        }
-
         // POST: User/Create
         [HttpPost("Create")]
+        [Authorize(Policy = "CanManageUser")]
         public async Task<IActionResult> CreateUser(AddUser user)
         {
             try
@@ -77,7 +68,7 @@ namespace Unilevel.Controllers
         [Authorize]
         public async Task<IActionResult> Logout()
         {
-            var userId = _userService.GetUserId();
+            var userId = User.FindFirstValue("id");
             await _userRepository.Logout(userId);
             return Ok();
         }
@@ -99,44 +90,12 @@ namespace Unilevel.Controllers
 
         // DELETE: User/Delete/{id}
         [HttpDelete("Delete/{id}")]
-        [Authorize(Roles = "Owner, Administrator")]
+        [Authorize(Policy = "CanManageUser")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             try
             {
                 await _userRepository.DeleteUserAsync(id);
-                return Ok(new { Message = "success" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Error = ex.Message });
-            }
-        }
-
-        // PUT: User/AddToArea/{areaCode}/{id}
-        [HttpPut("AddToArea/{areaCode}/{id}")]
-        [Authorize(Roles = "Owner, Administrator")]
-        public async Task<IActionResult> AddUserIntoArea(string areaCode, string id)
-        {
-            try
-            {
-                await _userRepository.AddUserIntoAreaAsync(areaCode, id);
-                return Ok(new { Message = "success" });
-            }
-            catch(Exception ex)
-            {
-                return BadRequest(new { Error = ex.Message });
-            }
-        }
-
-        // DELETE: User/RemoveFromArea/{id}
-        [HttpDelete("RemoveFromArea/{id}")]
-        [Authorize(Roles = "Owner, Administrator")]
-        public async Task<IActionResult> RemoveUserFromArea(string id)
-        {
-            try
-            {
-                await _userRepository.RemoveUserFromAreaAsync(id);
                 return Ok(new { Message = "success" });
             }
             catch (Exception ex)
@@ -152,7 +111,7 @@ namespace Unilevel.Controllers
         {
             try
             {
-                var userId = User?.Identity?.Name;
+                var userId = User.FindFirstValue("id");
                 await _userRepository.EditInfoUserAsync(user, userId);
                 return Ok(new { Message = "success" });
             }
@@ -164,7 +123,7 @@ namespace Unilevel.Controllers
 
         // PUT: User/EditRole/{id}/{roleId}
         [HttpPut("EditRole/{id}/{roleId}")]
-        [Authorize(Roles = "Owner, Administrator")]
+        [Authorize(Policy = "CanManageUser")]
         public async Task<IActionResult> EditRoleUser(string id, string roleId)
         {
             try
@@ -180,7 +139,7 @@ namespace Unilevel.Controllers
 
         // POST: User/ImportFromFileExcel
         [HttpPost("ImportFromFileExcel")]
-        [Authorize(Roles = "Owner, Administrator")]
+        [Authorize(Policy = "CanManageUser")]
         public async Task<IActionResult> ImportUserFromFileExcel(IFormFile file)
         {
             try
@@ -218,7 +177,6 @@ namespace Unilevel.Controllers
 
         // PUT: User/ChangePassword
         [HttpPut("ChangePassword")]
-        [Authorize]
         public async Task<IActionResult> ChangePassword(ChangePass change)
         {
             try
@@ -231,11 +189,54 @@ namespace Unilevel.Controllers
                 {
                     return BadRequest(new { Error = "new password and receive new password is not the same" });
                 }
-                var userId = _userService.GetUserId();
+                var userId = User.FindFirstValue("id");
                 await _userRepository.ChangePasswordAsync(userId, change.Password, change.NewPassword);
                 return Ok(new { Message = "success" });
             }
             catch(Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        // GET: User/ListSurvey
+        [HttpGet("ListSurvey")]
+        [Authorize]
+        public async Task<IActionResult> GetAllSurveyOfUserId()
+        {
+            try
+            {
+                string userId = User.FindFirstValue("id");
+                var surveys = await _userRepository.GetAllSurveyOfUserIdAsync(userId);
+                return Ok(surveys);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        // GET: User/QuestionOfSurvey/{surveyId}
+        [HttpGet("QuestionOfSurvey/{surveyId}")]
+        public async Task<IActionResult> GetAllQuestionBySurveyId(string surveyId)
+        {
+            var listQuestion = await _userRepository.GetAllQuestionBySurveyIdAsync(surveyId);
+
+            return Ok(listQuestion);
+        }
+
+        // POST: User/UserSendResultSurvey
+        [HttpPost("UserSendResultSurvey")]
+        [Authorize]
+        public async Task<IActionResult> UserSendResultSurvey(ResultSurveyModel resultSurvey)
+        {
+            try
+            {
+                string userId = User.FindFirstValue("id");
+                await _userRepository.UserSendResultSurveyAsync(resultSurvey, userId);
+                return Ok(new { Message = "Success" });
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new { Error = ex.Message });
             }

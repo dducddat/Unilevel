@@ -23,13 +23,7 @@ namespace Unilevel.Controllers
             return Ok(questions);
         }
 
-        // GET: Question/List/NotAddSurveyOrRemove
-        [HttpGet("List/NotAddSurveyOrRemove")]
-        public async Task<IActionResult> GetAllQuesNotAddSurveyOrRemove()
-        {
-            var questions = await _questionRepository.GetQuesNotAddSurveyOrRemoveAsync();
-            return Ok(questions);
-        }
+        
 
         // GET: Question/QuestionDetails
         [HttpGet("Details")]

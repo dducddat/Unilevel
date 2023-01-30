@@ -63,22 +63,6 @@ namespace Unilevel.Services
             return quesList;
         }
 
-        public async Task<List<ViewQuestion>> GetQuesNotAddSurveyOrRemoveAsync()
-        {
-            var questions = await _context.Questions.Where(q => q.Status == true).ToListAsync();
-            List<ViewQuestion> quesList = new List<ViewQuestion>();
-            foreach (var ques in questions)
-            {
-                quesList.Add(new ViewQuestion
-                {
-                    Id = ques.Id,
-                    Status = "Availble",
-                    Title = ques.Title,
-                });
-            }
-            return quesList;
-        }
-
         public async Task<QuestionDetail> QuestionDetailAsync(string quesId)
         {
             var ques = await _context.Questions.SingleOrDefaultAsync(q => q.Id == quesId);

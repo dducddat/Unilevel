@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 using Unilevel.Data;
+using Unilevel.Helpers;
 using Unilevel.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,17 +15,36 @@ builder.Services.AddDbContext<UnilevelContext>(options =>
 
 builder.Services.AddAutoMapper(typeof(Program));
 
+builder.Services.AddAuthorization(option => {
+    option.AddPolicy("CanManageRole", policy =>
+        policy.AddRequirements(new UserRoleRequirement("Role.Manage"))
+    );
+
+    option.AddPolicy("CanManageArea", policy =>
+        policy.AddRequirements(new UserRoleRequirement("Area.Manage"))
+    );
+
+    option.AddPolicy("CanManageDistributor", policy =>
+        policy.AddRequirements(new UserRoleRequirement("Distributor.Manage"))
+    );
+    option.AddPolicy("CanManageUser", policy =>
+        policy.AddRequirements(new UserRoleRequirement("User.Manage"))
+    );
+});
+
+builder.Services.AddScoped<IAuthorizationHandler, UserRoleHandler>();
 builder.Services.AddScoped<IDistributorRepository, DistributorRepository>();
 builder.Services.AddScoped<IAreaRepository, AreaRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IEmailServices, EmailServices>();
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
+builder.Services.AddScoped<IArticlesRepository, ArticlesRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
-builder.Services.AddHttpContextAccessor();
-//builder.Services.AddScoped<IDistributorRepository, DistributorRepository>();
+builder.Services.AddMemoryCache();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(option =>
 {

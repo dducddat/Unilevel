@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System;
 using Unilevel.Data;
 using Unilevel.Models;
 
@@ -99,17 +97,27 @@ namespace Unilevel.Services
             List<SurveyList> surveyLists = new List<SurveyList>();
 
             foreach (var survey in surveys) {
-                var userDid = _context.RequestSurveys.Where(rs => rs.SurveyId == survey.Id)
-                                                     .Where(rs => rs.Status == true)
-                                                     .Count();
-                var userRequest = _context.RequestSurveys.Count(rs => rs.SurveyId == survey.Id);
+                var userRequest = await _context.RequestSurveys.CountAsync(rs => rs.SurveyId == survey.Id);
+
+                string numberOfPeopleDid = string.Empty;
+                if (userRequest == 0)
+                {
+                    numberOfPeopleDid = "This survey has not been submitted yet";
+                }   
+                else
+                {
+                    var userDid = await _context.RequestSurveys.Where(rs => rs.SurveyId == survey.Id)
+                                                               .Where(rs => rs.Status == true).CountAsync();
+
+                    numberOfPeopleDid = $"{userDid}/{userRequest}";
+                }    
 
                 surveyLists.Add(new SurveyList {
                     SurveyId = survey.Id,
                     TitleSurvey = survey.Title,
                     StartDate = survey.StartDate,
                     EndDate = survey.EndDate,
-                    NumberOfPeopleDid = $"{userDid}/{userRequest}"
+                    NumberOfPeopleDid = numberOfPeopleDid
                 });
             }
             return surveyLists;
@@ -126,25 +134,21 @@ namespace Unilevel.Services
             userDidOrDontDo.SurveyId = survey.Id;
             userDidOrDontDo.TitleSurvey = survey.Title;
             userDidOrDontDo.Created = survey.Created;
+            userDidOrDontDo.Users = new List<UserInfo>();
 
             var requestSurvey = await _context.RequestSurveys.Where(rs => rs.SurveyId == surveyId)
                                                              .Where(rs => rs.Status == finish).ToListAsync();
 
-            if (requestSurvey != null)
+            foreach (var item in requestSurvey)
             {
-                userDidOrDontDo.Users = new List<UserInfo>();
-
-                foreach (var item in requestSurvey)
-                {
-                    var user = await _context.Users.SingleOrDefaultAsync(u => u.Id == item.UserId);
-                    userDidOrDontDo.Users.Add(
-                        new UserInfo
-                        {
-                            Id = item.UserId,
-                            FullName = user.FullName,
-                            Email = user.Email,
-                        });
-                }
+                var user = await _context.Users.SingleOrDefaultAsync(u => u.Id == item.UserId);
+                userDidOrDontDo.Users.Add(
+                    new UserInfo
+                    {
+                        Id = item.UserId,
+                        FullName = user.FullName,
+                        Email = user.Email,
+                    });
             }
 
             return userDidOrDontDo;
@@ -251,90 +255,67 @@ namespace Unilevel.Services
             return ListUserInvalid;
         }
 
-        public async Task<List<SurveyList>> GetAllSurveyOfUserIdAsync(string userId)
+        public async Task<List<UserSurveyResultsInfor>> UserSurveyResultsInforAsync(string userId, string surveyId)
         {
-            var user = await _context.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
-            if (user == null)
-                throw new Exception();
-
-            var requestSurveys = await _context.RequestSurveys.Where(rs => rs.UserId == userId)
-                                                              .Join( _context.Surveys, 
-                                                                     rs => rs.SurveyId,
-                                                                     s => s.Id,
-                                                                     (rs, s) => new {SurveyId = rs.SurveyId,
-                                                                                     Title = s.Title,
-                                                                                     EndDate = s.EndDate}) 
-                                                              .ToListAsync();
-
-            List<SurveyList> surveys = new List<SurveyList>();
-            foreach (var requestSurey in requestSurveys)
-            {
-                surveys.Add(new SurveyList() {
-                    SurveyId = requestSurey.SurveyId,
-                    TitleSurvey = requestSurey.Title,
-                    EndDate = requestSurey.EndDate
-                });
-            }
-
-            return surveys;
-        }
-
-        public async Task<List<QuestionDetail>> GetAllQuestionBySurveyIdAsync(string surveyId)
-        {
-            var questions = await _context.Questions.Where(q => q.SurveyId == surveyId).ToListAsync();
-
-            List<QuestionDetail> ListQuestion = new List<QuestionDetail>();
-
-            if(questions != null)
-            {
-                foreach (var question in questions)
-                {
-                    ListQuestion.Add(new QuestionDetail
-                    {
-                        Id = question.Id,
-                        Title = question.Title,
-                        AnswerA = question.AnswerA,
-                        AnswerB = question.AnswerB,
-                        AnswerC = question.AnswerC,
-                        AnswerD = question.AnswerD,
-                        SurveyId = question.SurveyId
-                    });
-                }
-            }    
-
-            return ListQuestion;
-        }
-
-        public async Task ResultSurveyOfUserAsync(ResultSurveyModel resultSurvey, string userId)
-        {
-            var requestSurvey = await _context.RequestSurveys
-                .Where(rs => rs.SurveyId == resultSurvey.SurveyId)
+            var result = await _context.ResultSurveys
+                .Include(rs => rs.User)
+                .Include(rs => rs.Survey)
+                .Include(rs => rs.Question)
+                .Where(rs => rs.SurveyId == surveyId)
                 .Where(rs => rs.UserId == userId)
-                .SingleOrDefaultAsync();
+                .ToListAsync();
 
-            if (requestSurvey is null)
-                throw new Exception("Request survey not found");
-            else if (requestSurvey.Status == true)
-                throw new Exception("User who have taken the survey");
+            List<UserSurveyResultsInfor> listUserSurveyResultsInfor = new List<UserSurveyResultsInfor>();
 
-            requestSurvey.Status = true;
-
-            _context.Update(requestSurvey);
-            await _context.SaveChangesAsync();
-
-            foreach (var result in resultSurvey.Results)
+            foreach (var r in result)
             {
-                _context.Add(new ResultSurvey { Id = Guid.NewGuid().ToString(),
-                                                UserId = userId,
-                                                QuestionId = result.QuestionId,
-                                                ResultA = result.ResultA,
-                                                ResultB = result.ResultB,
-                                                ResultC = result.ResultC,
-                                                ResultD = result.ResultD,
-                                                SurveyId = resultSurvey.SurveyId
+                listUserSurveyResultsInfor.Add(new UserSurveyResultsInfor
+                {
+                    SurveyTitle = r.Survey.Title,
+                    FullName = r.User.FullName,
+                    Email = r.User.Email,
+                    QuestionTitle = r.Question.Title,
+                    AnswerA = r.Question.AnswerA,
+                    AnswerB = r.Question.AnswerB,
+                    AnswerC = r.Question.AnswerC,
+                    AnswerD = r.Question.AnswerD,
+                    ResultA = r.ResultA,
+                    ResultB = r.ResultB,
+                    ResultC = r.ResultC,
+                    ResultD = r.ResultD
                 });
-                await _context.SaveChangesAsync();
             }
+
+            return listUserSurveyResultsInfor;
+        }
+
+        public async Task EditSurveyAsync(AddOrEditSurvey survey, string surveyId)
+        {
+            var s = await _context.Surveys.SingleOrDefaultAsync(s => s.Id == surveyId);
+
+            if (s == null)
+                throw new Exception("Survey not found");
+
+            s.Title = survey.Title;
+
+            _context.Update(s);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<ViewQuestion>> GetQuesNotAddSurveyOrRemoveAsync()
+        {
+            var questions = await _context.Questions.Where(q => q.Status == true).ToListAsync();
+            List<ViewQuestion> quesList = new List<ViewQuestion>();
+            foreach (var ques in questions)
+            {
+                quesList.Add(new ViewQuestion
+                {
+                    Id = ques.Id,
+                    Status = "Availble",
+                    Title = ques.Title,
+                });
+            }
+            return quesList;
         }
     }
 }

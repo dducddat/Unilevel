@@ -6,6 +6,8 @@ namespace Unilevel.Services
     {
         public Task<SurveyInfo> CreateSurveyAsync(AddOrEditSurvey survey);
 
+        public Task EditSurveyAsync(AddOrEditSurvey survey, string surveyId);
+
         public Task<SurveyDetail> SurveyDetailAsync(string surveyId);
 
         public Task<List<string>> AddQuestionAsync(string surveyId, AddListQuestionId ListQuestionId);
@@ -18,10 +20,8 @@ namespace Unilevel.Services
 
         public Task<List<string>> RequestSurveyAsync(string surveyId, SendRequestSurvey requestSurvey, bool add);
 
-        public Task<List<SurveyList>> GetAllSurveyOfUserIdAsync(string userId);
+        public Task<List<UserSurveyResultsInfor>> UserSurveyResultsInforAsync(string userId, string survey);
 
-        public Task<List<QuestionDetail>> GetAllQuestionBySurveyIdAsync(string surveyId);
-
-        public Task ResultSurveyOfUserAsync(ResultSurveyModel resultSurvey, string userId);
+        public Task<List<ViewQuestion>> GetQuesNotAddSurveyOrRemoveAsync();
     }
 }

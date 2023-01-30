@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using Unilevel.Models;
 using Unilevel.Services;
@@ -7,6 +8,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(Policy = "CanManageDistributor")]
     public class DistributorController : ControllerBase
     {
         public readonly IDistributorRepository _distributorRepository;
@@ -43,44 +45,6 @@ namespace Unilevel.Controllers
             catch (Exception ex)
             {
                 return Problem(detail: ex.Message, statusCode: StatusCodes.Status500InternalServerError);
-            }
-        }
-
-        // GET: Distributor/List/NotInArea
-        [HttpGet("List/NotInArea")]
-        public async Task<IActionResult> GetAllDisNotInArea()
-        {
-            var distributors = await _distributorRepository.GetAllDisNotInAreaAsync();
-            return Ok(distributors);
-        }
-
-        // PUT: Distributor/AddToArea/{areaCode}/{disId}
-        [HttpPut("AddToArea/{areaCode}/{disId}")]
-        public async Task<IActionResult> AddDisIntoArea(string areaCode, string disId)
-        {
-            try
-            {
-                await _distributorRepository.AddDisIntoAreaAsync(areaCode, disId);
-                return Ok(new {Message = "successful" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Error = ex.Message });
-            }
-        }
-
-        // DELETE: Distributor/RemoveFromArea/{disId}
-        [HttpDelete("RemoveFromArea/{disId}")]
-        public async Task<IActionResult> RemoveDisFromArea(string disId)
-        {
-            try
-            {
-                await _distributorRepository.RemoveDisFromAreaAsync(disId);
-                return Ok(new {Message = "Edit successfully" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Error = ex.Message });
             }
         }
 

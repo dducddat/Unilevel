@@ -9,5 +9,9 @@ namespace Unilevel.Services
         public Task AddRoleAsync(AddOrEditRole role);
         public Task EditRoleAsync(AddOrEditRole role, string roleId);
         public Task DeleteRoleAsync(string roleId);
+        public Task<List<MenuModel>> GetAllMenuAsync();
+        public Task AddPermissionOnRoleAsync(AddLinkRoleMenu linkRoleMenu);
+        public Task<List<LinkRoleMenuModel>> GetAllPermissionOnRoleAsync();
+        public Task DeletePermissionOnRoleAsync(int id);
     }
 }
