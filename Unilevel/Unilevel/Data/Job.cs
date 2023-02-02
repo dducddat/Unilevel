@@ -36,8 +36,8 @@ namespace Unilevel.Data
 
         public DateTime EndDate { get; set; }
 
-        public string Status { get; set; }
+        public int Status { get; set; }
 
-        public string Remove { get; set; }
+        public bool Remove { get; set; }
     }
 }

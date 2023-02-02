@@ -8,9 +8,16 @@ namespace Unilevel.Data
 
         public DateTime VisitDate { get; set; }
 
-        public string Time { get; set; }
+        public string Title { get; set; }
+
+        public int Time { get; set; }
 
         public string DistributorId { get; set; }
+
+        public string? CreateByUserId { get; set; }
+
+        [ForeignKey("CreateByUserId")]
+        public User? User { get; set; }
 
         [ForeignKey("DistributorId")]
         public Distributor Distributor { get; set; }
@@ -20,5 +27,12 @@ namespace Unilevel.Data
         public DateTime CreateDate { get; set; }
 
         public bool Remove { get; set; }
+
+        public string? GuestId { get; set; }
+
+        [ForeignKey("GuestId")]
+        public User? Guest { get; set; }
+
+        public bool Status { get; set; }
     }
 }

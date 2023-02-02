@@ -41,7 +41,7 @@ namespace Unilevel.Helpers
                 {
                     AbsoluteExpiration = DateTime.Now.AddMinutes(30),
                     Priority = CacheItemPriority.High,
-                    SlidingExpiration = TimeSpan.FromMinutes(25)
+                    SlidingExpiration = TimeSpan.FromMinutes(30)
                 };
 
                 _memoryCache.Set("Menu", listMenu, cacheExpiryOption);

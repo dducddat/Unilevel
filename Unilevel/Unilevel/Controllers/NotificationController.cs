@@ -44,7 +44,7 @@ namespace Unilevel.Controllers
         {
             var userId = User.FindFirstValue("id");
 
-            return Ok(await _notification.GetAllNotificationCreatedAsync(userId));
+            return Ok(await _notification.GetAllNotificationCreatedOrReceivedAsync(userId, true));
         }
 
         [HttpGet("GetAllReceived")]
@@ -53,7 +53,57 @@ namespace Unilevel.Controllers
         {
             var userId = User.FindFirstValue("id");
 
-            return Ok(await _notification.GetAllNotificationReceivedAsync(userId));
+            return Ok(await _notification.GetAllNotificationCreatedOrReceivedAsync(userId, false));
+        }
+
+        [HttpGet("GetNew")]
+        [Authorize]
+        public async Task<IActionResult> NewNotificationReceived()
+        {
+            var userId = User.FindFirstValue("id");
+
+            return Ok(await _notification.GetNewNotificationReceivedAsync(userId));
+        }
+
+        [HttpGet("Detail/{id}")]
+        public async Task<IActionResult> GetNotificationById(int id)
+        {
+            try
+            {
+                return Ok(await _notification.GetNotificationByIdAsync(id, false));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("View/{id}")]
+        public async Task<IActionResult> ViewNotificationById(int id)
+        {
+            try
+            {
+                return Ok(await _notification.GetNotificationByIdAsync(id, true));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("Remove/{id}")]
+        public async Task<IActionResult> RemoveNotification(int id)
+        {
+            try
+            {
+                await _notification.RemoveNotificationAsync(id);
+
+                return Ok("Successful");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Unilevel.Data;
 
@@ -11,9 +12,10 @@ using Unilevel.Data;
 namespace Unilevel.Migrations
 {
     [DbContext(typeof(UnilevelContext))]
-    partial class UnilevelContextModelSnapshot : ModelSnapshot
+    [Migration("20230131073956_AddColTableVisit")]
+    partial class AddColTableVisit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -105,6 +107,24 @@ namespace Unilevel.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int>("JobId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JobId");
+
+                    b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("Unilevel.Data.CommentDetail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -112,20 +132,39 @@ namespace Unilevel.Migrations
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("JobId")
-                        .HasColumnType("int");
-
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("JobId");
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CommentDetails");
+                });
+
+            modelBuilder.Entity("Unilevel.Data.CompanionList", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("VisitPlanId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments");
+                    b.HasIndex("VisitPlanId");
+
+                    b.ToTable("CompanionLists");
                 });
 
             modelBuilder.Entity("Unilevel.Data.Distributor", b =>
@@ -192,14 +231,16 @@ namespace Unilevel.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("Remove")
-                        .HasColumnType("bit");
+                    b.Property<string>("Remove")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -580,9 +621,6 @@ namespace Unilevel.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("GuestId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("Purpose")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -590,13 +628,7 @@ namespace Unilevel.Migrations
                     b.Property<bool>("Remove")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("Status")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Time")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
+                    b.Property<string>("Time")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -608,8 +640,6 @@ namespace Unilevel.Migrations
                     b.HasIndex("CreateByUserId");
 
                     b.HasIndex("DistributorId");
-
-                    b.HasIndex("GuestId");
 
                     b.ToTable("VisitPlans");
                 });
@@ -633,15 +663,37 @@ namespace Unilevel.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Job");
+                });
+
+            modelBuilder.Entity("Unilevel.Data.CommentDetail", b =>
+                {
                     b.HasOne("Unilevel.Data.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Job");
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Unilevel.Data.CompanionList", b =>
+                {
+                    b.HasOne("Unilevel.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Unilevel.Data.VisitPlan", "VisitPlan")
+                        .WithMany()
+                        .HasForeignKey("VisitPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
+
+                    b.Navigation("VisitPlan");
                 });
 
             modelBuilder.Entity("Unilevel.Data.Distributor", b =>
@@ -818,13 +870,7 @@ namespace Unilevel.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Unilevel.Data.User", "Guest")
-                        .WithMany()
-                        .HasForeignKey("GuestId");
-
                     b.Navigation("Distributor");
-
-                    b.Navigation("Guest");
 
                     b.Navigation("User");
                 });

@@ -43,6 +43,8 @@ builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
 builder.Services.AddScoped<IArticlesRepository, ArticlesRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IVisitPlanRepository, VisitPlanRepository>();
+builder.Services.AddScoped<IJobRepository, JobRepository>();
 
 builder.Services.AddMemoryCache();
 

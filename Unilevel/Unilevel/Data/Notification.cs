@@ -12,8 +12,6 @@ namespace Unilevel.Data
 
         public DateTime CreateDate { get; set; }
 
-        public bool Status { get; set; }
-
         public string? CreateByUserId { get; set; }
 
         [ForeignKey("CreateByUserId")]
@@ -23,8 +21,6 @@ namespace Unilevel.Data
 
         [ForeignKey("RecipientUserId")]
         public User? RecipientUser { get; set; }
-
-        public bool Remove { get; set; }
 
         public bool View { get; set; }
     }

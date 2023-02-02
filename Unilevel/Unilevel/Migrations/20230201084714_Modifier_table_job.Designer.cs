@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Unilevel.Data;
 
@@ -11,9 +12,10 @@ using Unilevel.Data;
 namespace Unilevel.Migrations
 {
     [DbContext(typeof(UnilevelContext))]
-    partial class UnilevelContextModelSnapshot : ModelSnapshot
+    [Migration("20230201084714_Modifier_table_job")]
+    partial class Modifier_table_job
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -105,6 +107,24 @@ namespace Unilevel.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int>("JobId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JobId");
+
+                    b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("Unilevel.Data.CommentDetail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -112,20 +132,15 @@ namespace Unilevel.Migrations
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("JobId")
-                        .HasColumnType("int");
-
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("JobId");
-
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("CommentDetails");
                 });
 
             modelBuilder.Entity("Unilevel.Data.Distributor", b =>
@@ -192,8 +207,9 @@ namespace Unilevel.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("Remove")
-                        .HasColumnType("bit");
+                    b.Property<string>("Remove")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -633,13 +649,16 @@ namespace Unilevel.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Job");
+                });
+
+            modelBuilder.Entity("Unilevel.Data.CommentDetail", b =>
+                {
                     b.HasOne("Unilevel.Data.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Job");
 
                     b.Navigation("User");
                 });

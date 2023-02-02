@@ -6,10 +6,14 @@ namespace Unilevel.Services
     {
         public Task AddNotificationAsync(AddNotification notification, string userId);
 
-        public Task<List<UserIdAndFullName>> GetListUserAsync();
+        public Task<List<UserIdAndNameAndEmail>> GetListUserAsync();
 
-        public Task<List<ListNotification>> GetAllNotificationCreatedAsync(string userId);
+        public Task<List<ListNotification>> GetAllNotificationCreatedOrReceivedAsync(string userId, bool created);
 
-        public Task<List<ListNotification>> GetAllNotificationReceivedAsync(string userId);
+        public Task<List<NewNotification>> GetNewNotificationReceivedAsync(string userId);
+
+        public Task<NotificationDetail> GetNotificationByIdAsync(int id, bool view);
+
+        public Task RemoveNotificationAsync(int id);
     }
 }

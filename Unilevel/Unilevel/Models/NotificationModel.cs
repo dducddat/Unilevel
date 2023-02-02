@@ -19,4 +19,22 @@
 
         public bool View { get; set; }
     }
+
+    public class NewNotification
+    {
+        public int Id { get; set; }
+        public string AvatarUserCreated { get; set; }
+        public string Title { get; set; }
+        public string NameUserCreated { get; set; }
+    }
+
+    public class NotificationDetail
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string CreateDate { get; set; }
+        public string AvatarUserCreated { get; set; }
+        public string NameUserCreated { get; set; }
+    }
 }

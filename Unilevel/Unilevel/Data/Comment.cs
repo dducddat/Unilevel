@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using MessagePack;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Unilevel.Data
 {
@@ -8,7 +9,17 @@ namespace Unilevel.Data
         public int Id { get; set; }
 
         public int JobId { get; set; }
+
         [ForeignKey("JobId")]
         public Job Job { get; set; }
+
+        public string UserId { get; set; }
+
+        [ForeignKey("UserId")]
+        public User User { get; set; }
+
+        public string Content { get; set; }
+
+        public DateTime CreateDate { get; set; }
     }
 }
