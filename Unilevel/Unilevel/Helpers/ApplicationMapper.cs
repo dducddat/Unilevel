@@ -93,6 +93,22 @@ namespace Unilevel.Helpers
                                         .ForMember(des => des.CreateByUser,
                 act => act.MapFrom(src => src.User.FullName))
                                         .ReverseMap();
+
+            CreateMap<Comment, CommentSummary>().ForMember(des => des.AvatarUser,
+                act => act.MapFrom(src => src.User.Avatar))
+                                        .ForMember(des => des.FullNameUser,
+                act => act.MapFrom(src => src.User.FullName))
+                                        .ForMember(des => des.Content,
+                act => act.MapFrom(src => src.Content))
+                                        .ReverseMap();
+
+            CreateMap<Course, CourseModel>().ForMember(des => des.Id,
+                act => act.MapFrom(src => src.Id))
+                                        .ForMember(des => des.Title,
+                act => act.MapFrom(src => src.Title))
+                                        .ForMember(des => des.CreatedDate,
+                act => act.MapFrom(src => src.CreateDate.ToString("dd-MM-yyyy")))
+                                        .ReverseMap();
         }
     }
 }

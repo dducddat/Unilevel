@@ -7,7 +7,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize(Policy = "CanManageArea")]
+    [Authorize(Policy = "ManageArea")]
     public class AreaController : ControllerBase
     {
         private readonly IAreaRepository _areaRepo;

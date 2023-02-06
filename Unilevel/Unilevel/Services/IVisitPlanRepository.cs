@@ -8,11 +8,16 @@ namespace Unilevel.Services
 
         public Task<List<dynamic>> GetListDistributorAsync();
 
-        public Task RemoveVisitPlanAsync(int id);
+        public Task RemoveVisitPlanAsync(int id, string userId);
 
         public Task<VisitPlanDetails> VisitPlanDetailsAsync(int id);
 
-        public Task<List<VisitPlanSummary>> GetAllVisitPlanOfUserAsync(string userId);
+        public Task<List<VisitPlanSummary>> GetAllVisitPlanOfUserCreateOrAssignAsync(string userId, bool created);
 
+        public Task ConfirmVisitPlan(string userId, int visitPlanId);
+
+        public Task<object> EditVisitPLanAsync(string userId, int visitPlanId);
+
+        public Task EditVisitPLanAsync(string userId, int visitPlanId, EditVisitPlan visitPlan);
     }
 }

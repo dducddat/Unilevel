@@ -57,11 +57,13 @@ namespace Unilevel.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task ChangeStatusJobAsync(int id, int status)
+        public async Task ChangeStatusJobAsync(int id, int status, string userId)
         {
             var j = await _context.Jobs.SingleOrDefaultAsync(j => j.Id == id);
 
             if (j == null) throw new Exception("Job not found");
+
+            if (userId != j.CreateByUserId) throw new Exception("You do not have permission to change status this task");
 
             j.Status = status;
 
@@ -69,13 +71,15 @@ namespace Unilevel.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<dynamic> EditJobAsync(int id)
+        public async Task<dynamic> EditJobAsync(int id, string userId)
         {
             var job = await _context.Jobs
                 .Include(j => j.User)
                 .SingleOrDefaultAsync(j => j.Id == id);
 
             if (job == null) throw new Exception("Job not found");
+
+            if (userId != job.CreateByUserId) throw new Exception("You do not have permission to edit this task");
 
             return new { Id = job.Id,
                          Title = job.Title,
@@ -87,12 +91,14 @@ namespace Unilevel.Services
                          };
         }
 
-        public async Task EditJobAsync(int id, EditJob job)
+        public async Task EditJobAsync(int id, string userId, EditJob job)
         {
             var j = await _context.Jobs
                 .SingleOrDefaultAsync(j => j.Id == job.Id);
 
             if (j == null) throw new Exception("Job not found");
+
+            if (userId != j.CreateByUserId) throw new Exception("You do not have permission to edit this task");
 
             var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == job.UserEmail);
 
@@ -263,16 +269,29 @@ namespace Unilevel.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task RemoveJobAsync(int id)
+        public async Task RemoveJobAsync(int id, string userId)
         {
             var job = await _context.Jobs.SingleOrDefaultAsync(j => j.Id == id);
 
             if (job is null)
                 throw new Exception("Job not found");
 
+            if (userId != job.CreateByUserId) throw new Exception("You do not have permission to delete this task");
+
             job.Remove = true;
             _context.Update(job);
 
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task SendCommentAsync(SendComment comment, string userId)
+        {
+            var job = _context.Jobs.Any(j => j.Id == comment.JobId);
+
+            if (!job)
+                throw new Exception("Job not found");
+
+            _context.Add(new Comment { UserId = userId, CreateDate = DateTime.Now, Content = comment.Content, JobId = comment.JobId});
             await _context.SaveChangesAsync();
         }
     }

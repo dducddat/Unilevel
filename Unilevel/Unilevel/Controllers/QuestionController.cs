@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Unilevel.Models;
 using Unilevel.Services;
 
@@ -6,6 +7,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(Policy = "ManageQuestion")]
     public class QuestionController : ControllerBase
     {
         private readonly IQuestionRepository _questionRepository;
@@ -22,8 +24,6 @@ namespace Unilevel.Controllers
             var questions = await _questionRepository.GetAllQuestionAsync();
             return Ok(questions);
         }
-
-        
 
         // GET: Question/QuestionDetails
         [HttpGet("Details")]

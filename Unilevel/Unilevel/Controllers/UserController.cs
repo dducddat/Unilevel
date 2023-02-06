@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using OfficeOpenXml;
 using System.Data;
 using System.Security.Claims;
@@ -21,7 +22,7 @@ namespace Unilevel.Controllers
 
         // GET: User/List
         [HttpGet("List")]
-        [Authorize(Policy = "CanManageUser")]
+        [Authorize(Policy = "ManageUser")]
         public async Task<IActionResult> GetAllUser()
         {
             var users = await _userRepository.GetAllUserAsync();
@@ -30,7 +31,7 @@ namespace Unilevel.Controllers
 
         // POST: User/Create
         [HttpPost("Create")]
-        [Authorize(Policy = "CanManageUser")]
+        [Authorize(Policy = "ManageUser")]
         public async Task<IActionResult> CreateUser(AddUser user)
         {
             try
@@ -65,12 +66,19 @@ namespace Unilevel.Controllers
         }
 
         [HttpDelete("Logout")]
-        [Authorize]
+        [Authorize(Policy = "Using")]
         public async Task<IActionResult> Logout()
         {
-            var userId = User.FindFirstValue("id");
-            await _userRepository.Logout(userId);
-            return Ok();
+            try
+            {
+                var userId = User.FindFirstValue("id");
+                await _userRepository.Logout(userId);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message});
+            }
         }
 
         // POST: User/RefreshToken
@@ -90,7 +98,7 @@ namespace Unilevel.Controllers
 
         // DELETE: User/Delete/{id}
         [HttpDelete("Delete/{id}")]
-        [Authorize(Policy = "CanManageUser")]
+        [Authorize(Policy = "ManageUser")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             try
@@ -106,7 +114,7 @@ namespace Unilevel.Controllers
 
         // PUT: User/EditInfo
         [HttpPut("EditInfo")]
-        [Authorize]
+        [Authorize(Policy = "Using")]
         public async Task<IActionResult> EditInfoUser(EditInfoUser user)
         {
             try
@@ -123,7 +131,7 @@ namespace Unilevel.Controllers
 
         // PUT: User/EditRole/{id}/{roleId}
         [HttpPut("EditRole/{id}/{roleId}")]
-        [Authorize(Policy = "CanManageUser")]
+        [Authorize(Policy = "ManageUser")]
         public async Task<IActionResult> EditRoleUser(string id, string roleId)
         {
             try
@@ -139,7 +147,7 @@ namespace Unilevel.Controllers
 
         // POST: User/ImportFromFileExcel
         [HttpPost("ImportFromFileExcel")]
-        [Authorize(Policy = "CanManageUser")]
+        [Authorize(Policy = "ManageUser")]
         public async Task<IActionResult> ImportUserFromFileExcel(IFormFile file)
         {
             try
@@ -177,6 +185,7 @@ namespace Unilevel.Controllers
 
         // PUT: User/ChangePassword
         [HttpPut("ChangePassword")]
+        [Authorize]
         public async Task<IActionResult> ChangePassword(ChangePass change)
         {
             try
@@ -201,7 +210,7 @@ namespace Unilevel.Controllers
 
         // GET: User/ListSurvey
         [HttpGet("ListSurvey")]
-        [Authorize]
+        [Authorize(Policy = "DoSurvey")]
         public async Task<IActionResult> GetAllSurveyOfUserId()
         {
             try
@@ -218,6 +227,7 @@ namespace Unilevel.Controllers
 
         // GET: User/QuestionOfSurvey/{surveyId}
         [HttpGet("QuestionOfSurvey/{surveyId}")]
+        [Authorize(Policy = "DoSurvey")]
         public async Task<IActionResult> GetAllQuestionBySurveyId(string surveyId)
         {
             var listQuestion = await _userRepository.GetAllQuestionBySurveyIdAsync(surveyId);
@@ -227,7 +237,7 @@ namespace Unilevel.Controllers
 
         // POST: User/UserSendResultSurvey
         [HttpPost("UserSendResultSurvey")]
-        [Authorize]
+        [Authorize(Policy = "DoSurvey")]
         public async Task<IActionResult> UserSendResultSurvey(ResultSurveyModel resultSurvey)
         {
             try
@@ -235,6 +245,66 @@ namespace Unilevel.Controllers
                 string userId = User.FindFirstValue("id");
                 await _userRepository.UserSendResultSurveyAsync(resultSurvey, userId);
                 return Ok(new { Message = "Success" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        [HttpGet("fogot-password")]
+        public async Task<IActionResult> ForgotPassword(string emailUser, string url)
+        {
+            try
+            {
+                var result = await _userRepository.ForgotPassword(emailUser, url);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail(string token, string email)
+        {
+            try
+            {
+                var result = await _userRepository.ConfirmMail(token, email);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        [HttpPut("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPassword resetPassword)
+        {
+            try
+            {
+                await _userRepository.ResetPassword(resetPassword);
+
+                return Ok(new { Message = "Successful" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        [HttpGet("profile")]
+        [Authorize(Policy = "Using")]
+        public async Task<IActionResult> GetProfileUser()
+        {
+            try
+            {
+                string userId = User.FindFirstValue("id");
+                return Ok(await _userRepository.GetProfileUserAsync(userId));
             }
             catch (Exception ex)
             {

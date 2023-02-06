@@ -8,6 +8,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(Policy = "ManageArticles")]
     public class ArticlesController : ControllerBase
     {
         private readonly IArticlesRepository _articles;
@@ -40,7 +41,6 @@ namespace Unilevel.Controllers
 
         // POST: Articles/Create
         [HttpPost("Create")]
-        [Authorize]
         public async Task<IActionResult> AddArticles(ArticlesBrief articlesBrief)
         {
             var userId = User.FindFirstValue("id");

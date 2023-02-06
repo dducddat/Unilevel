@@ -14,6 +14,6 @@ namespace Unilevel.Services
 
         public Task<NotificationDetail> GetNotificationByIdAsync(int id, bool view);
 
-        public Task RemoveNotificationAsync(int id);
+        public Task RemoveNotificationAsync(int id, string userId);
     }
 }

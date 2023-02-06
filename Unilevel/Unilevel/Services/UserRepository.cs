@@ -1,10 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using NuGet.Protocol.Plugins;
 using System.Data;
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.WebSockets;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Security.Policy;
 using System.Text;
+using System.Text.Unicode;
 using Unilevel.Data;
 using Unilevel.Models;
 
@@ -15,17 +22,19 @@ namespace Unilevel.Services
         private readonly UnilevelContext _context;
         private readonly IEmailServices _emailService;
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
 
-        public UserRepository(UnilevelContext context, IEmailServices emailServices, IConfiguration configuration) 
+        public UserRepository(UnilevelContext context, IEmailServices emailServices, IConfiguration configuration, IMapper mapper)
         {
             _context = context;
             _emailService = emailServices;
             _configuration = configuration;
+            _mapper = mapper;
         }
 
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
-            using (var hmac = new HMACSHA512()) 
+            using (var hmac = new HMACSHA512())
             {
                 passwordSalt = hmac.Key;
                 passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
@@ -38,7 +47,7 @@ namespace Unilevel.Services
             {
                 var computedHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
                 return computedHash.SequenceEqual(passwordHash);
-            }    
+            }
         }
 
         public async Task CreateUserAsync(AddUser user)
@@ -61,14 +70,14 @@ namespace Unilevel.Services
             email.Subject = "Login Info";
             email.Body = "<p><big>Your login account info</big></p>" +
                 "<p><big>Username: " + user.Email + "</big></p>" +
-                "<p><big>Password: " + password + "</big></p>"; 
+                "<p><big>Password: " + password + "</big></p>";
             _emailService.SendEmail(email);
             CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
 
             string id = DateTime.Now.ToString("ddMMyyHHmmssfffffff");
 
             var userID = _context.Users.FirstOrDefault(u => u.Id == id);
-            if(userID != null) { throw new Exception("user id already exist, please wait a second and recreate"); }
+            if (userID != null) { throw new Exception("user id already exist, please wait a second and recreate"); }
             User userData = new User()
             {
                 Id = id,
@@ -180,7 +189,7 @@ namespace Unilevel.Services
             var accessToken = jwtTokenHandler.WriteToken(token);
             string refreshToken = GenerateRefreshToken();
 
-            _context.Add(new RefreshToken { 
+            _context.Add(new RefreshToken {
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
                 RefToken = refreshToken,
@@ -247,7 +256,7 @@ namespace Unilevel.Services
             if (userPhone != null)
             {
                 throw new DuplicateNameException("phone already exist");
-            } 
+            }
             else if (user.FullName != string.Empty && user.Address != string.Empty && user.PhoneNumber != string.Empty)
             {
                 userData.FullName = user.FullName;
@@ -256,7 +265,7 @@ namespace Unilevel.Services
                 _context.Update(userData);
                 await _context.SaveChangesAsync();
             }
-            else if(userData == null)
+            else if (userData == null)
             {
                 throw new Exception("user not exist");
             }
@@ -270,7 +279,7 @@ namespace Unilevel.Services
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
             var role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
-            if (role != null && user != null) 
+            if (role != null && user != null)
             {
                 user.RoleId = role.Id;
                 _context.Update(user);
@@ -285,7 +294,7 @@ namespace Unilevel.Services
         public async Task ImportUserFromFileExcelAsync(List<FileExcelUser> excelUsers)
         {
             var fileExcelUsers = excelUsers;
-            foreach(var user in fileExcelUsers) {
+            foreach (var user in fileExcelUsers) {
                 var role = _context.Roles.FirstOrDefault(r => r.Name == user.Role && r.Remove == false);
                 var reportToRole = _context.Roles.FirstOrDefault(r => r.Name == user.ReportTo && r.Remove == false);
                 if (role != null && reportToRole != null)
@@ -316,8 +325,17 @@ namespace Unilevel.Services
         public async Task ChangePasswordAsync(string userId, string password, string newPassword)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            if(!VeryfiPasswordHash(password, user.PasswordHash, user.PasswordSalt))
-            { throw new Exception("old password is not correct"); }
+
+            if (user == null)
+                throw new Exception("User not found");
+
+            var permission = await _context.LinkRoleMenus.Include(lrm => lrm.Menu).Where(lrm => lrm.RoleId == user.RoleId).ToListAsync();
+
+            if (!permission.Where(p => p.Menu.Permission == "User.ChangePassword").Any())
+                throw new Exception("Access denied");
+
+            if (!VeryfiPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            { throw new Exception("Old password is not correct"); }
             CreatePasswordHash(newPassword, out byte[] passwordHash, out byte[] passwordSalt);
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
@@ -328,7 +346,11 @@ namespace Unilevel.Services
         public async Task Logout(string userId)
         {
             var storedToken = _context.RefreshTokens.Where(r => r.UserId == userId).ToList();
-            foreach(var token in storedToken) {
+
+            if (storedToken == null)
+                throw new Exception("Not found");
+
+            foreach (var token in storedToken) {
                 _context.Remove(token);
                 await _context.SaveChangesAsync();
             }
@@ -425,5 +447,180 @@ namespace Unilevel.Services
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<dynamic> ForgotPassword(string emailUser, string url)
+        {
+            var user = await _context.Users.Where(u => u.Email == emailUser)
+                .SingleOrDefaultAsync();
+
+            if (user is null) throw new Exception("Email invalid");
+
+            var permission = await _context.LinkRoleMenus.Include(lrm => lrm.Menu).Where(lrm => lrm.RoleId == user.RoleId).ToListAsync();
+
+            if (!permission.Where(p => p.Menu.Permission == "User.ResetPassword").Any())
+            {
+                return new { Message = "Access denied" };
+            }
+
+            string token = GenerateConfirmMailToken(user);
+
+            EmailModel email = new EmailModel();
+            email.To = user.Email;
+            email.Subject = "Fogot Password";
+            email.Body = "<p><big>You need to confirm your email by clicking the link below</big></p>" +
+                "<p><big>" + url +
+                "?email=" + user.Email +
+                "&token=" + token +
+                "</big></p>";
+            _emailService.SendEmail(email);
+
+            Console.WriteLine(token);
+
+            return new { Status = "Successful", Message = "We have sent an email on " + user.Email + " please open the email and click the link" };
+        }
+
+        public async Task ResetPassword(ResetPassword resetPassword)
+        {
+            try
+            {
+                var user = await _context.Users.Where(u => u.Email == resetPassword.Email)
+                .SingleOrDefaultAsync();
+
+                if (user is null) throw new Exception("Email invalid");
+
+                if (!CheckTokenConfirmMail(resetPassword.Token)) throw new Exception("Invalid token");
+
+                if (resetPassword.NewPassword != resetPassword.ConfirmNewPassword) throw new Exception("Please enter a new password and confirm the same password");
+
+                CreatePasswordHash(resetPassword.NewPassword, out byte[] passwordHash, out byte[] passwordSalt);
+
+                user.PasswordSalt = passwordSalt;
+                user.PasswordHash = passwordHash;
+
+                _context.Update(user);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<dynamic> ConfirmMail(string token, string email)
+        {
+            var user = await _context.Users.Where(u => u.Email == email)
+                .SingleOrDefaultAsync();
+
+            if (user is null) throw new Exception("Email invalid");
+
+            try
+            {
+                if (!CheckTokenConfirmMail(token))
+                    return new { Error = "Invalid token" };
+
+                return new { Message = "Successful", Token = GenerateConfirmMailToken(user) };
+            }
+            catch (Exception ex)
+            {
+                return new { Error = ex.Message };
+            }
+        }
+
+        private string GenerateConfirmMailToken(User user)
+            {
+                var jwtTokenHandler = new JwtSecurityTokenHandler();
+
+                var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("SecretKey").Value));
+
+                var signinCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha512Signature);
+
+                string JwtId = DateTime.Now.ToString("ddMMyyhhmmssfffffff");
+
+                var tokenDescription = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new[]
+                    {
+                    new Claim(ClaimTypes.Name, user.FullName),
+                    new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, JwtId)
+                }),
+                    Expires = DateTime.Now.AddMinutes(2),
+                    SigningCredentials = signinCredentials
+                };
+
+                var token = jwtTokenHandler.CreateToken(tokenDescription);
+                var accessToken = jwtTokenHandler.WriteToken(token);
+
+                return accessToken;
+            }
+
+        private bool CheckTokenConfirmMail(string token)
+            {
+                if (token is null) throw new Exception("Invalid client request");
+
+                var tokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
+                    .GetBytes(_configuration.GetSection("SecretKey").Value)),
+
+                    ClockSkew = TimeSpan.Zero,
+
+                    ValidateLifetime = false
+                };
+
+                var jwtTokenHandler = new JwtSecurityTokenHandler();
+
+                var tokenInVerification = jwtTokenHandler.ValidateToken(token,
+                    tokenValidationParameters, out var validateToken);
+                if (!(validateToken is JwtSecurityToken jwtSecurityToken)) throw new Exception("access token invalid format");
+
+                var result = jwtSecurityToken.Header.Alg.Equals
+                        (SecurityAlgorithms.HmacSha512,
+                        StringComparison.InvariantCultureIgnoreCase);
+
+                if (!result) throw new SecurityTokenException("Invalid token");
+
+                var expireDate = long.Parse(tokenInVerification.Claims.FirstOrDefault(x =>
+                x.Type == JwtRegisteredClaimNames.Exp).Value);
+
+                var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+                if (expireDate <= now) throw new Exception("Token has expired");
+
+                return true;
+            }
+
+        public async Task<ProfileUser> GetProfileUserAsync(string userId)
+        {
+            var user = await _context.Users.Where(u => u.Id == userId).Select(u => new {Name = u.FullName, CreateDate = u.CreatedDate}).SingleOrDefaultAsync();
+
+            if (user == null)
+                throw new Exception("User not found");
+
+            var taskDone = _context.Jobs.Include(cm => cm.User).Where(t => t.CreateByUserId == userId && t.Status != 1 && t.Status != 2 && t.Status != 3)
+                .OrderByDescending(t => t.CreateDate)
+                .ToList();
+
+            var taskNotDone = _context.Jobs.Include(cm => cm.User).Where(t => t.CreateByUserId == userId && t.Status != 4 && t.Status != 5)
+                .OrderByDescending(t => t.CreateDate)
+                .ToList();
+
+            var lastComment = _context.Comments.Include(cm => cm.User).Where(cm => cm.JobId == taskDone.First().Id).Take(3).ToList();
+
+            var courses =  _context.Courses.Where(course => course.UserId == userId).ToList();
+
+            return new ProfileUser
+            {
+                FullName = user.Name,
+                CratedDate = user.CreateDate.ToString("dd-MM-yyyy"),
+                TaskDone = _mapper.Map<List<JobSummary>>(taskDone),
+                TaskNotDone = _mapper.Map<List<JobSummary>>(taskNotDone),
+                LastComment = _mapper.Map<List<CommentSummary>>(lastComment),
+                Courses = _mapper.Map<List<CourseModel>>(courses)
+            };
+        }
     }
-}
+} 

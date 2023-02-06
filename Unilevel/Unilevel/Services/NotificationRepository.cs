@@ -93,12 +93,14 @@ namespace Unilevel.Services
             return _mapper.Map<NotificationDetail>(notification);
         }
 
-        public async Task RemoveNotificationAsync(int id)
+        public async Task RemoveNotificationAsync(int id, string userId)
         {
             var notification = await _context.Notifications.SingleOrDefaultAsync(n => n.Id == id);
 
             if (notification is null)
                 throw new Exception("Not found");
+
+            if (userId != notification.CreateByUserId) throw new Exception("You don't have permission to delete notification");
 
             _context.Remove(notification);
             await _context.SaveChangesAsync();

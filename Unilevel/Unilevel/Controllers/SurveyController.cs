@@ -8,6 +8,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(Policy = "ManageSurvey")]
     public class SurveyController : ControllerBase
     {
         private readonly ISurveyRepository _surveyRepository;

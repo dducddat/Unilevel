@@ -9,6 +9,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(Policy = "ManageVisit")]
     public class VisitPlanController : ControllerBase
     {
         private readonly IVisitPlanRepository _visitPlanRepository;
@@ -19,12 +20,11 @@ namespace Unilevel.Controllers
         }
 
         [HttpPost("Create")]
-        //[Authorize]
         public async Task<IActionResult> AddVisitPlan(VisitPlanAdd visitPlan)
         {
             try
             {
-                var userId = "1101231133214145221";/*User.FindFirstValue("id")*/;
+                var userId = User.FindFirstValue("id");
 
                 var result = await _visitPlanRepository.AddVisitPlanAsync(visitPlan, userId);
 
@@ -45,12 +45,20 @@ namespace Unilevel.Controllers
             return Ok(await _visitPlanRepository.GetListDistributorAsync());
         }
 
-        [HttpGet("/AllVisitPlanOfUser")]
-        public async Task<IActionResult> GetAllVisitPlanOfUser()
+        [HttpGet("/AllVisitPlanOfUserCreated")]
+        public async Task<IActionResult> GetAllVisitPlanOfUserCreated()
         {
-            string userId = "1101231133214145221";
+            var userId = User.FindFirstValue("id");
 
-            return Ok(await _visitPlanRepository.GetAllVisitPlanOfUserAsync(userId));
+            return Ok(await _visitPlanRepository.GetAllVisitPlanOfUserCreateOrAssignAsync(userId, true));
+        }
+
+        [HttpGet("/AllVisitPlanOfUserAssign")]
+        public async Task<IActionResult> GetAllVisitPlanOfUserAssign()
+        {
+            var userId = User.FindFirstValue("id");
+
+            return Ok(await _visitPlanRepository.GetAllVisitPlanOfUserCreateOrAssignAsync(userId, false));
         }
 
         [HttpGet("/Details/{id}")]
@@ -73,7 +81,60 @@ namespace Unilevel.Controllers
         {
             try
             {
-                await _visitPlanRepository.RemoveVisitPlanAsync(id);
+                var userId = User.FindFirstValue("id");
+
+                await _visitPlanRepository.RemoveVisitPlanAsync(id, userId);
+
+                return Ok(new { Message = "Successful" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        [HttpPut("/Confirm/{visitPlanId}")]
+        public async Task<IActionResult> ConfirmVisitPlan(int visitPlanId)
+        {
+            try
+            {
+                var userId = User.FindFirstValue("id");
+
+                await _visitPlanRepository.ConfirmVisitPlan(userId, visitPlanId);
+
+                return Ok(new { Message = "Successful" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        [HttpGet("/Edit/{visitPlanId}")]
+        public async Task<IActionResult> EditVisitPlan(int visitPlanId)
+        {
+            try
+            {
+                var userId = User.FindFirstValue("id");
+
+                var result = await _visitPlanRepository.EditVisitPLanAsync(userId, visitPlanId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        [HttpPut("/Edit/{visitPlanId}")]
+        public async Task<IActionResult> EditVisitPlan(int visitPlanId, EditVisitPlan visitPlan)
+        {
+            try
+            {
+                var userId = User.FindFirstValue("id");
+
+                await _visitPlanRepository.EditVisitPLanAsync(userId, visitPlanId, visitPlan);
 
                 return Ok(new { Message = "Successful" });
             }

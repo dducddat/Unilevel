@@ -18,5 +18,9 @@ namespace Unilevel.Services
         public Task UserSendResultSurveyAsync(ResultSurveyModel resultSurvey, string userId);
         public Task<List<SurveyList>> GetAllSurveyOfUserIdAsync(string userId);
         public Task<List<QuestionDetail>> GetAllQuestionBySurveyIdAsync(string surveyId);
+        public Task<dynamic> ForgotPassword(string emailUser, string url);
+        public Task ResetPassword(ResetPassword resetPassword);
+        public Task<dynamic> ConfirmMail(string token, string email);
+        public Task<ProfileUser> GetProfileUserAsync(string userId);
     }
 }

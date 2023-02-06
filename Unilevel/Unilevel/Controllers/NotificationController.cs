@@ -9,6 +9,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(Policy = "ManageNotification")]
     public class NotificationController : ControllerBase
     {
         private readonly INotificationRepository _notification;
@@ -19,7 +20,6 @@ namespace Unilevel.Controllers
         }
 
         [HttpPost("Create")]
-        [Authorize]
         public async Task<IActionResult> AddNotification(AddNotification notification)
         {
             if (notification.Title == string.Empty || notification.Description == string.Empty)
@@ -39,7 +39,6 @@ namespace Unilevel.Controllers
         }
 
         [HttpGet("GetAllCreated")]
-        [Authorize]
         public async Task<IActionResult> GetAllNotificationCreated()
         {
             var userId = User.FindFirstValue("id");
@@ -48,7 +47,6 @@ namespace Unilevel.Controllers
         }
 
         [HttpGet("GetAllReceived")]
-        [Authorize]
         public async Task<IActionResult> GetAllNotificationReceived()
         {
             var userId = User.FindFirstValue("id");
@@ -57,7 +55,6 @@ namespace Unilevel.Controllers
         }
 
         [HttpGet("GetNew")]
-        [Authorize]
         public async Task<IActionResult> NewNotificationReceived()
         {
             var userId = User.FindFirstValue("id");
@@ -96,7 +93,9 @@ namespace Unilevel.Controllers
         {
             try
             {
-                await _notification.RemoveNotificationAsync(id);
+                string userId = User.FindFirstValue("id");
+
+                await _notification.RemoveNotificationAsync(id, userId);
 
                 return Ok("Successful");
             }

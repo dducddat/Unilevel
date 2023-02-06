@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Unilevel.Models;
 using Unilevel.Services;
@@ -7,6 +8,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(Policy = "ManageCategory")]
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryRepository _categoryRepositor;

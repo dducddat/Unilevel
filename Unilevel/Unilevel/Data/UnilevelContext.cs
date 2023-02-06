@@ -10,23 +10,24 @@ namespace Unilevel.Data
         {
         }
 
-        public DbSet<Unilevel.Data.RefreshToken> RefreshTokens { get; set; } = default!;
-        public DbSet<Unilevel.Data.User> Users { get; set; } = default!;
-        public DbSet<Unilevel.Data.Role> Roles { get; set; } = default!;
-        public DbSet<Unilevel.Data.Distributor> Distributors { get; set; } = default!;
-        public DbSet<Unilevel.Data.Area> Areas { get; set; } = default!;
-        public DbSet<Unilevel.Data.Question> Questions { get; set; } = default!;
-        public DbSet<Unilevel.Data.Survey> Surveys { get; set; } = default!;
-        public DbSet<Unilevel.Data.RequestSurvey> RequestSurveys { get; set; } = default!;
-        public DbSet<Unilevel.Data.ResultSurvey> ResultSurveys { get; set; } = default!;
-        public DbSet<Unilevel.Data.Job> Jobs { get; set; } = default!;
-        public DbSet<Unilevel.Data.Category> Categories { get; set; } = default!;
-        public DbSet<Unilevel.Data.Comment> Comments { get; set; } = default!;
-        public DbSet<Unilevel.Data.VisitPlan> VisitPlans { get; set; } = default!;
-        public DbSet<Unilevel.Data.Menu> Menus { get; set; } = default!;
-        public DbSet<Unilevel.Data.LinkRoleMenu> LinkRoleMenus { get; set; } = default!;
-        public DbSet<Unilevel.Data.Rating> Ratings { get; set; } = default!;
-        public DbSet<Unilevel.Data.Notification> Notifications { get; set; } = default!;
-        public DbSet<Unilevel.Data.Articles> Articles { get; set; } = default!;
+        public DbSet<RefreshToken> RefreshTokens { get; set; } = default!;
+        public DbSet<User> Users { get; set; } = default!;
+        public DbSet<Role> Roles { get; set; } = default!;
+        public DbSet<Distributor> Distributors { get; set; } = default!;
+        public DbSet<Area> Areas { get; set; } = default!;
+        public DbSet<Question> Questions { get; set; } = default!;
+        public DbSet<Survey> Surveys { get; set; } = default!;
+        public DbSet<RequestSurvey> RequestSurveys { get; set; } = default!;
+        public DbSet<ResultSurvey> ResultSurveys { get; set; } = default!;
+        public DbSet<Job> Jobs { get; set; } = default!;
+        public DbSet<Category> Categories { get; set; } = default!;
+        public DbSet<Comment> Comments { get; set; } = default!;
+        public DbSet<VisitPlan> VisitPlans { get; set; } = default!;
+        public DbSet<Menu> Menus { get; set; } = default!;
+        public DbSet<LinkRoleMenu> LinkRoleMenus { get; set; } = default!;
+        public DbSet<Rating> Ratings { get; set; } = default!;
+        public DbSet<Notification> Notifications { get; set; } = default!;
+        public DbSet<Articles> Articles { get; set; } = default!;
+        public DbSet<Course> Courses { get; set; } = default!;
     }
 }

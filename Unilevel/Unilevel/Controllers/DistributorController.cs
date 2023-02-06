@@ -8,7 +8,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize(Policy = "CanManageDistributor")]
+    [Authorize(Policy = "ManageDistributor")]
     public class DistributorController : ControllerBase
     {
         public readonly IDistributorRepository _distributorRepository;

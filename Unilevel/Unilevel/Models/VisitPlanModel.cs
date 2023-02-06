@@ -1,4 +1,6 @@
-﻿namespace Unilevel.Models
+﻿using Unilevel.Data;
+
+namespace Unilevel.Models
 {
     public class VisitPlanAdd
     {
@@ -29,5 +31,15 @@
         public string VisitDate { get; set; }
         public string CreateByUser { get; set; }
         public bool Status { get; set; }
+    }
+
+    public class EditVisitPlan
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public int Time { get; set; }
+        public DateTime VisitDate { get; set; }
+        public string DistributorId { get; set; }
+        public string Purpose { get; set; }
     }
 }

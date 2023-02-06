@@ -8,7 +8,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    [Authorize(Policy = "CanManageRole")]
+    [Authorize(Policy = "ManageRole")]
     public class RoleController : ControllerBase
     {
         private readonly IRoleRepository _roleRepository;

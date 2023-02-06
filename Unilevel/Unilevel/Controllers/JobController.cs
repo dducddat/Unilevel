@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Unilevel.Data;
 using Unilevel.Models;
 using Unilevel.Services;
@@ -8,6 +10,7 @@ namespace Unilevel.Controllers
 {
     [Route("[controller]")]
     [ApiController]
+    [Authorize(Policy = "ManageTask")]
     public class JobController : ControllerBase
     {
         private readonly IJobRepository _job;
@@ -38,7 +41,8 @@ namespace Unilevel.Controllers
         {
             try
             {
-                string userId = "1101231133214145221";
+                string userId = User.FindFirstValue("id");
+
                 await _job.AddJobAsync(job, userId);
 
                 return Ok(new {Message = "Successful"});
@@ -82,7 +86,9 @@ namespace Unilevel.Controllers
         {
             try
             {
-                await _job.RemoveJobAsync(id);
+                string userId = User.FindFirstValue("id");
+
+                await _job.RemoveJobAsync(id, userId);
 
                 return Ok(new { Message = "Successful" });
             }
@@ -95,7 +101,7 @@ namespace Unilevel.Controllers
         [HttpGet("GetAllMyJobCreate")]
         public async Task<IActionResult> GetAllMyJobCreate()
         {
-            string userId = "1101231133214145221";
+            string userId = User.FindFirstValue("id");
 
             var result = await _job.GetAllMyJobCreateOrAssignAsync(userId, true);
 
@@ -105,7 +111,7 @@ namespace Unilevel.Controllers
         [HttpGet("GetAllMyJobAssign")]
         public async Task<IActionResult> GetAllMyJobAssign()
         {
-            string userId = "1101231133214145221";
+            string userId = User.FindFirstValue("id");
 
             var result = await _job.GetAllMyJobCreateOrAssignAsync(userId, false);
 
@@ -115,9 +121,18 @@ namespace Unilevel.Controllers
         [HttpGet("EditJob/{id}")]
         public async Task<IActionResult> EditJob(int id)
         {
-            var result = await _job.EditJobAsync(id);
+            try
+            {
+                string userId = User.FindFirstValue("id");
 
-            return Ok(result);
+                var result = await _job.EditJobAsync(id, userId);
+
+                return Ok(result);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
         }
 
         [HttpPut("EditJob/{id}")]
@@ -125,7 +140,9 @@ namespace Unilevel.Controllers
         {
             try
             {
-                await _job.EditJobAsync(id, job);
+                string userId = User.FindFirstValue("id");
+
+                await _job.EditJobAsync(id, userId, job);
 
                 return Ok(new { Message = "Successful" });
             }
@@ -140,7 +157,26 @@ namespace Unilevel.Controllers
         {
             try
             {
-                await _job.ChangeStatusJobAsync(id, status);
+                string userId = User.FindFirstValue("id");
+
+                await _job.ChangeStatusJobAsync(id, status, userId);
+
+                return Ok(new { Message = "Successful" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        [HttpPost("SendComment")]
+        public async Task<IActionResult> SendComment(SendComment comment)
+        {
+            try
+            {
+                string userId = User.FindFirstValue("id");
+
+                await _job.SendCommentAsync(comment, userId);
 
                 return Ok(new { Message = "Successful" });
             }
